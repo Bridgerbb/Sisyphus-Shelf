@@ -1,3 +1,13 @@
+# Security Keys
+*.pem
+
+# Python environment
 venv/
-db.sqlite3
 __pycache__/
+*.py[cod]
+
+# Local Database
+db.sqlite3
+
+# OS stuff
+.DS_Store
