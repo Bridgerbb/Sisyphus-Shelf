@@ -11,50 +11,47 @@
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4 p-md-5">
-                <form action="#" method="POST">
+                <form action="{% url 'add_item' %}" method="POST">
                     {% csrf_token %}
 
                     <div class="row g-3">
                         <div class="col-md-12 mb-2">
-                            <label for="title" class="form-label fw-bold">Title</label>
-                            <input type="text" class="form-control" id="title" placeholder="e.g., The Lord of the Rings" required>
+                            <label class="form-label fw-bold">Title</label>
+                            {{ form.title }}
                         </div>
 
                         <div class="col-md-12 mb-2">
-                            <label for="creator" class="form-label fw-bold">Creator (Author, Director, Studio)</label>
-                            <input type="text" class="form-control" id="creator" placeholder="e.g., J.R.R. Tolkien" required>
+                            <label class="form-label fw-bold">Creator (Author, Director, Studio)</label>
+                            {{ form.creator }}
                         </div>
 
                         <div class="col-md-6 mb-2">
-                            <label for="mediaType" class="form-label fw-bold">Media Type</label>
-                            <select class="form-select" id="mediaType">
-                                <option value="book">📖 Book</option>
-                                <option value="movie">🎬 Movie</option>
-                                <option value="game">🎮 Game</option>
-                            </select>
+                            <label class="form-label fw-bold">📺 Media Type</label>
+                            {{ form.media_type }}
                         </div>
 
                         <div class="col-md-6 mb-2">
-                            <label for="status" class="form-label fw-bold">Current Status</label>
-                            <select class="form-select" id="status">
-                                <option value="backlog">Backlog</option>
-                                <option value="in-progress">In-Progress</option>
-                                <option value="finished">Finished</option>
-                            </select>
+                            <label class="form-label fw-bold">⏳ Current Status</label>
+                            {{ form.status }}
+                        </div>
+
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">⭐ Rating</label>
+                            {{ form.rating }}
                         </div>
 
                         <div class="col-md-12 mb-2">
                             <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" role="switch" id="priorityFlag">
-                                <label class="form-check-label fw-bold text-danger" for="priorityFlag">
+                                {{ form.priority_flag }}
+                                <label class="form-check-label fw-bold text-danger" for="{{ form.priority_flag.id_for_label }}">
                                     🔥 Mark as High Priority (Next Up)
                                 </label>
                             </div>
                         </div>
 
                         <div class="col-md-12 mb-3 mt-4">
-                            <label for="notes" class="form-label fw-bold">Personal Notes</label>
-                            <textarea class="form-control" id="notes" rows="3" placeholder="Why do you want to play/read/watch this?"></textarea>
+                            <label class="form-label fw-bold">📝 Personal Notes</label>
+                            {{ form.notes }}
                         </div>
 
                         <div class="col-12 mt-4 d-grid gap-2 d-md-flex justify-content-md-end">

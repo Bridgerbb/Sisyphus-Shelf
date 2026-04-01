@@ -5,11 +5,13 @@ class MediaItem(models.Model):
         ('Book', 'Book'),
         ('Movie', 'Movie'),
         ('Game', 'Game'),
+        ('Other', 'Other'),
     ]
     STATUS_CHOICES = [
         ('Backlog', 'Backlog'),
         ('In-Progress', 'In-Progress'),
         ('Finished', 'Finished'),
+
     ]
 
     title = models.CharField(max_length=255)

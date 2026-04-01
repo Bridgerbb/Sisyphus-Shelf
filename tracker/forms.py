@@ -1,0 +1,17 @@
+from django import forms
+from .models import MediaItem
+
+class MediaItemForm(forms.ModelForm):
+    class Meta:
+        model = MediaItem
+        fields = ['title', 'creator', 'media_type', 'status', 'priority_flag', 'rating', 'notes']
+    # This tells Django to use Bootstrap CSS classes for the HTML inputs
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., The Lord of the Rings'}),
+            'creator': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., J.R.R. Tolkien'}),
+            'media_type': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'rating': forms.Select(attrs={'class': 'form-select'}),
+            'priority_flag': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Why do you want to play/read/watch this?'}),
+        }

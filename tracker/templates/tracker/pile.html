@@ -25,42 +25,34 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for item in items %}
                     <tr>
                         <td class="ps-4 fw-bold">
-                            Dune
-                            <span class="badge bg-danger ms-2">🔥 Next Up</span>
+                            {{ item.title }}
+                            {% if item.priority_flag %}
+                                <span class="badge bg-danger ms-2">🔥 Next Up</span>
+                            {% endif %}
                         </td>
-                        <td>Frank Herbert</td>
-                        <td><span class="badge bg-secondary">📖 Book</span></td>
-                        <td><span class="badge bg-warning text-dark">Backlog</span></td>
+                        <td>{{ item.creator }}</td>
+                        
+                        <td><span class="badge bg-secondary">{{ item.get_media_type_display }}</span></td>
+                        <td><span class="badge bg-light text-dark border">{{ item.get_status_display }}</span></td>
+                        
                         <td class="text-end pe-4">
-                            <a href="{% url 'item_detail' 1 %}" class="btn btn-sm btn-outline-dark">View</a>
+                            <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-dark">View</a>
                             <button class="btn btn-sm btn-outline-danger">Delete</button>
                         </td>
                     </tr>
                     
+                    {% empty %}
                     <tr>
-                        <td class="ps-4 fw-bold">Hades</td>
-                        <td>Supergiant Games</td>
-                        <td><span class="badge bg-dark">🎮 Game</span></td>
-                        <td><span class="badge bg-primary">In-Progress</span></td>
-                        <td class="text-end pe-4">
-                            <a href="{% url 'item_detail' 2 %}" class="btn btn-sm btn-outline-dark">View</a>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <h5>Your pile is empty!</h5>
+                            <p>Click the "+ Add New Item" button to start your backlog.</p>
                         </td>
                     </tr>
-
-                    <tr>
-                        <td class="ps-4 fw-bold">The Matrix</td>
-                        <td>The Wachowskis</td>
-                        <td><span class="badge bg-info text-dark">🎬 Movie</span></td>
-                        <td><span class="badge bg-success">Finished</span></td>
-                        <td class="text-end pe-4">
-                            <a href="{% url 'item_detail' 3 %}" class="btn btn-sm btn-outline-dark">View</a>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                        </td>
-                    </tr>
-                </tbody>
+                    {% endfor %}
+                    </tbody>
             </table>
         </div>
     </div>
