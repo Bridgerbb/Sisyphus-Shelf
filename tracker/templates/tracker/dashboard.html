@@ -1,6 +1,10 @@
 {% extends 'tracker/base.html' %}
+{% load static %}
+
+{% block bg_image %}{% static 'tracker/shrug.gif' %}{% endblock %}
 
 {% block content %}
+
 <div class="row mb-4 mt-2">
     <div class="col-12">
         <h1 class="display-5 fw-bold">Welcome back, Sisyphus.</h1>
