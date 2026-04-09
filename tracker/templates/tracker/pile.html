@@ -4,22 +4,68 @@
 {% block bg_image %}{% static 'tracker/art.gif' %}{% endblock %}
 
 {% block content %}
-
 <div class="row mb-4 mt-2">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
             <h1 class="display-5 fw-bold">The Pile</h1>
             <p class="lead text-muted">Your unified archive of everything waiting to be consumed.</p>
         </div>
-        <a href="{% url 'add_item' %}" class="btn btn-primary btn-lg">+ Add New Item</a>
+        <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg">+ Add New Item</a>
     </div>
+</div>
+
+<div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+    
+    <a href="{% url 'pile' %}" 
+       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
+       🌐 All
+    </a>
+    
+    {% if current_type == 'Book' %}
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
+    {% else %}
+        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
+    {% endif %}
+
+    {% if current_type == 'Movie' %}
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
+    {% else %}
+        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
+    {% endif %}
+
+    {% if current_type == 'Game' %}
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
+    {% else %}
+        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
+    {% endif %}
+
+    {% if current_type == 'Other' %}
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
+    {% else %}
+        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
+    {% endif %}
+
+    <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
+
+    {% if current_status == 'Unfinished' %}
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
+    {% else %}
+        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
+    {% endif %}
+
+    {% if current_status == 'Finished' %}
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
+    {% else %}
+        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
+    {% endif %}
+
 </div>
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+                <thead>
                     <tr>
                         <th scope="col" class="ps-4">Title</th>
                         <th scope="col">Creator</th>
@@ -39,11 +85,28 @@
                         </td>
                         <td>{{ item.creator }}</td>
                         
-                        <td><span class="badge bg-secondary">{{ item.get_media_type_display }}</span></td>
-                        <td><span class="badge bg-light text-dark border">{{ item.get_status_display }}</span></td>
+                        <td>
+                            <span class="badge bg-dark border border-secondary">
+                                {% if item.media_type == 'Book' %}📚
+                                {% elif item.media_type == 'Movie' %}🎬
+                                {% elif item.media_type == 'Game' %}🎮
+                                {% else %}📦{% endif %}
+                                {{ item.get_media_type_display }}
+                            </span>
+                        </td>
+                        
+                        <td>
+                            {% if item.status == 'Backlog' %}
+                                <span class="badge bg-danger">Backlog</span>
+                            {% elif item.status == 'In-Progress' %}
+                                <span class="badge bg-warning text-dark">In-Progress</span>
+                            {% else %}
+                                <span class="badge bg-success">Finished</span>
+                            {% endif %}
+                        </td>
                         
                         <td class="text-end pe-4">
-                            <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-dark">View</a>
+                            <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-light">View</a>
                             <button class="btn btn-sm btn-outline-danger">Delete</button>
                         </td>
                     </tr>
@@ -51,12 +114,12 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center py-5 text-muted">
-                            <h5>Your pile is empty!</h5>
-                            <p>Click the "+ Add New Item" button to start your backlog.</p>
+                            <h5>No items match your filters.</h5>
+                            <p>Try clearing your filters or click "+ Add New Item" to expand your backlog.</p>
                         </td>
                     </tr>
                     {% endfor %}
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>

@@ -14,28 +14,28 @@
 
 <div class="row mb-5">
     <div class="col-md-4 mb-3">
-        <div class="card bg-secondary text-white h-100 shadow-sm border-0">
+        <div class="card text-white h-100 shadow-sm border-0">
             <div class="card-body">
                 <h6 class="card-title text-uppercase fw-bold opacity-75">The Pile</h6>
-                <h2 class="display-4 fw-bold">42</h2>
+                <h2 class="display-4 fw-bold">{{ total_backlog }}</h2>
                 <p class="card-text mb-0">Total items gathering dust.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card bg-primary text-white h-100 shadow-sm border-0">
+        <div class="card text-white h-100 shadow-sm border-0">
             <div class="card-body">
                 <h6 class="card-title text-uppercase fw-bold opacity-75">Currently Playing/Reading</h6>
-                <h2 class="display-4 fw-bold">3</h2>
+                <h2 class="display-4 fw-bold">{{ in_progress }}</h2>
                 <p class="card-text mb-0">Items in progress.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card bg-dark text-white h-100 shadow-sm border-0">
+        <div class="card text-white h-100 shadow-sm border-0">
             <div class="card-body">
                 <h6 class="card-title text-uppercase fw-bold opacity-75">Finished</h6>
-                <h2 class="display-4 fw-bold">12</h2>
+                <h2 class="display-4 fw-bold">{{ finished }}</h2>
                 <p class="card-text mb-0">Victories against Tsundoku.</p>
             </div>
         </div>
@@ -47,23 +47,32 @@
         <h4 class="fw-bold mb-3">🔥 Next Up</h4>
         <div class="card shadow-sm border-0">
             <ul class="list-group list-group-flush">
+                
+                {% for item in priority_items %}
                 <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                     <div>
-                        <h6 class="mb-1 fw-bold">Dune</h6>
-                        <span class="text-muted small">📖 Book • Frank Herbert</span>
+                        <h6 class="mb-1 fw-bold">{{ item.title }}</h6>
+                        <span class="text-muted small">
+                            {% if item.media_type == 'Book' %}📚
+                            {% elif item.media_type == 'Movie' %}🎬
+                            {% elif item.media_type == 'Game' %}🎮
+                            {% else %}📦{% endif %}
+                            {{ item.get_media_type_display }} • {{ item.creator }}
+                        </span>
                     </div>
                     <span class="badge bg-danger rounded-pill px-3 py-2">High Priority</span>
                 </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                    <div>
-                        <h6 class="mb-1 fw-bold">Hades</h6>
-                        <span class="text-muted small">🎮 Game • Supergiant Games</span>
-                    </div>
-                    <span class="badge bg-danger rounded-pill px-3 py-2">High Priority</span>
+                
+                {% empty %}
+                <li class="list-group-item text-center py-4 text-muted">
+                    No high priority items right now. You are free!
                 </li>
+                {% endfor %}
+                
             </ul>
-            <div class="card-footer bg-white text-center py-3 border-top-0">
-                <a href="{% url 'pile' %}" class="btn btn-outline-dark btn-sm px-4">View The Full Pile</a>
+            
+            <div class="card-footer bg-transparent text-center py-3 border-top-0">
+                <a href="{% url 'pile' %}" class="btn btn-outline-light btn-sm px-4">View The Full Pile</a>
             </div>
         </div>
     </div>
