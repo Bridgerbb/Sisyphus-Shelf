@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Case, When, Value, IntegerField 
 from .forms import MediaItemForm
 from .models import MediaItem
@@ -59,4 +59,27 @@ def add_item(request):
     return render(request, 'tracker/add_item.html', {'form': form})
 
 def item_detail(request, pk):
-    return render(request, 'tracker/item_detail.html')
+    item = get_object_or_404(MediaItem, pk=pk)
+    
+    if request.method == 'POST':
+        form = MediaItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('pile') 
+    else:
+        form = MediaItemForm(instance=item)
+        
+    context = {
+        'form': form,
+        'item': item
+    }
+    # This is the line that went missing! 
+    return render(request, 'tracker/item_detail.html', context)
+
+def delete_item(request, pk):
+    item = get_object_or_404(MediaItem, pk=pk)
+    
+    if request.method == 'POST':
+        item.delete()
+        
+    return redirect('pile')

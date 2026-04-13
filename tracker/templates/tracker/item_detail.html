@@ -1,61 +1,126 @@
 {% extends 'tracker/base.html' %}
+{% load static %}
+
+{% block bg_image %}{% static 'tracker/art.gif' %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-lg-8">
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-lg-8 col-md-10">
         
-        <div class="mb-4">
-            <a href="{% url 'pile' %}" class="text-decoration-none text-muted">
-                &larr; Back to The Pile
-            </a>
+        <div class="card bg-dark text-white shadow border-secondary mb-4">
+            <div class="card-body p-4 text-center">
+                <h1 class="display-5 fw-bold mb-1">{{ item.title }}</h1>
+                <h5 class="text-muted mb-3">{{ item.creator }}</h5>
+                
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge bg-secondary fs-6">
+                        {% if item.media_type == 'Book' %}📚
+                        {% elif item.media_type == 'Movie' %}🎬
+                        {% elif item.media_type == 'Game' %}🎮
+                        {% else %}📦{% endif %}
+                        {{ item.get_media_type_display }}
+                    </span>
+                    
+                    {% if item.status == 'Backlog' %}
+                        <span class="badge bg-danger fs-6">Backlog</span>
+                    {% elif item.status == 'In-Progress' %}
+                        <span class="badge bg-warning text-dark fs-6">In-Progress</span>
+                    {% else %}
+                        <span class="badge bg-success fs-6">Finished</span>
+                    {% endif %}
+                    
+                    {% if item.priority_flag %}
+                        <span class="badge bg-danger fs-6 border border-light">🔥 High Priority</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="badge bg-secondary mb-2">📖 Book</span>
-                    <h1 class="display-6 fw-bold mb-0">Dune</h1>
-                    <p class="text-muted fs-5 mt-1">By Frank Herbert</p>
-                </div>
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Backlog</span>
-            </div>
+            <div class="card-body p-4 p-md-5">
+                <h4 class="fw-bold border-bottom pb-3 mb-4">Update Item Details</h4>
+                
+                <form action="{% url 'item_detail' item.pk %}" method="POST">
+                    {% csrf_token %}
 
-            <div class="card-body px-4 pb-4">
-                <hr class="text-muted opacity-25 mb-4">
-
-                <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <h6 class="fw-bold text-uppercase text-muted small">Personal Rating</h6>
-                        <div class="d-flex align-items-center">
-                            <h2 class="mb-0 fw-bold me-2">--</h2> 
-                            <span class="text-muted fs-5">/ 5</span>
+                    <div class="row g-3">
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">Title</label>
+                            {{ form.title }}
                         </div>
-                        <small class="text-muted fst-italic">Not yet rated</small>
-                    </div>
 
-                    <div class="col-md-8 mb-4">
-                        <h6 class="fw-bold text-uppercase text-muted small">Details</h6>
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-2"><strong>Added on:</strong> March 25, 2026</li>
-                            <li class="mb-2"><strong>Priority:</strong> <span class="badge bg-danger">🔥 High (Next Up)</span></li>
-                        </ul>
-                    </div>
-                </div>
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">Creator</label>
+                            {{ form.creator }}
+                        </div>
 
-                <div class="mb-4">
-                    <h6 class="fw-bold text-uppercase text-muted small mb-2">Personal Notes</h6>
-                    <div class="p-3 bg-light rounded border">
-                        <p class="mb-0 text-muted fst-italic">No notes added yet. Time to start reading!</p>
-                    </div>
-                </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-bold">📺 Media Type</label>
+                            {{ form.media_type }}
+                        </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-5">
-                    <button class="btn btn-outline-danger px-4">Delete Item</button>
-                    <button class="btn btn-primary px-5">Edit Details</button>
-                </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-bold">⏳ Current Status</label>
+                            {{ form.status }}
+                        </div>
+
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">⭐ Rating</label>
+                            {{ form.rating }}
+                        </div>
+
+                        <div class="col-md-12 mb-2">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.priority_flag }}
+                                <label class="form-check-label fw-bold text-danger" for="{{ form.priority_flag.id_for_label }}">
+                                    🔥 Mark as High Priority (Next Up)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mb-3 mt-4">
+                            <label class="form-label fw-bold">📝 Personal Notes</label>
+                            {{ form.notes }}
+                        </div>
+
+                        <div class="col-12 mt-4 d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                Delete Item
+                            </button>
+                            
+                            <div>
+                                <a href="{% url 'pile' %}" class="btn btn-light px-4 border">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-5">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-danger fw-bold" id="deleteModalLabel">⚠️ Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you completely sure you want to delete <strong>{{ item.title }}</strong>? <br><br>
+                This action cannot be undone, and Sisyphus will be very disappointed in you.
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                
+                <form action="{% url 'delete_item' item.pk %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4">Yes, Delete It</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
