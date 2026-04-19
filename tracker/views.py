@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Case, When, Value, IntegerField 
+from django.db.models import Case, When, Value, IntegerField, Q  # <-- Added Q here!
 from .forms import MediaItemForm
 from .models import MediaItem
 
@@ -21,6 +21,7 @@ def dashboard(request):
 def pile(request):
     filter_type = request.GET.get('type')
     filter_status = request.GET.get('status')
+    search_query = request.GET.get('q') # <-- Grab the search text from the URL
     
     # 3-Tier Sorting: 0 = In-Progress, 1 = Backlog, 2 = Finished
     all_items = MediaItem.objects.annotate(
@@ -31,6 +32,11 @@ def pile(request):
             output_field=IntegerField(),
         )
     ).order_by('custom_order', 'created_at') 
+    
+    if search_query:
+        all_items = all_items.filter(
+            Q(title__icontains=search_query) | Q(creator__icontains=search_query)
+        )
     
     if filter_type:
         all_items = all_items.filter(media_type=filter_type)
@@ -43,7 +49,8 @@ def pile(request):
     context = {
         'items': all_items,
         'current_type': filter_type,
-        'current_status': filter_status 
+        'current_status': filter_status,
+        'search_query': search_query # <-- Pass it back so the search box remembers what you typed
     }
     
     return render(request, 'tracker/pile.html', context)
@@ -73,7 +80,6 @@ def item_detail(request, pk):
         'form': form,
         'item': item
     }
-    # This is the line that went missing! 
     return render(request, 'tracker/item_detail.html', context)
 
 def delete_item(request, pk):

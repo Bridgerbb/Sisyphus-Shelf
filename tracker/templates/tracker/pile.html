@@ -14,49 +14,62 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12">
+        <form method="GET" action="{% url 'pile' %}" class="d-flex shadow-sm">
+            {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
+            {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+            
+            <input type="text" name="q" class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill rounded-end-0 ps-4" 
+                   placeholder="Search by title or creator..." value="{{ search_query|default_if_none:'' }}">
+            <button class="btn btn-outline-light rounded-pill rounded-start-0 px-4" type="submit">🔍 Search</button>
+        </form>
+    </div>
+</div>
+
 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
     
     <a href="{% url 'pile' %}" 
-       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
+       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
        🌐 All
     </a>
     
     {% if current_type == 'Book' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
+        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
     {% endif %}
 
     {% if current_type == 'Movie' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
+        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
     {% endif %}
 
     {% if current_type == 'Game' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
+        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
     {% endif %}
 
     {% if current_type == 'Other' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
+        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
     {% endif %}
 
     <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
 
     {% if current_status == 'Unfinished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
     {% else %}
-        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
+        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
     {% endif %}
 
     {% if current_status == 'Finished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
     {% else %}
-        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
+        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
     {% endif %}
 
 </div>
@@ -80,7 +93,7 @@
                         <td class="ps-4 fw-bold">
                             {{ item.title }}
                             {% if item.priority_flag %}
-                                <span class="badge bg-danger ms-2">🔥 Next Up</span>
+                                <span class="badge ms-2" style="background-color: #000000;">🔥 Next Up</span>
                             {% endif %}
                         </td>
                         <td>{{ item.creator }}</td>
@@ -97,11 +110,11 @@
                         
                         <td>
                             {% if item.status == 'Backlog' %}
-                                <span class="badge bg-danger">Backlog</span>
+                                <span class="badge" style="background-color: #045C63;">Backlog</span>
                             {% elif item.status == 'In-Progress' %}
-                                <span class="badge bg-warning text-dark">In-Progress</span>
+                                <span class="badge" style="background-color: #610536;">In-Progress</span>
                             {% else %}
-                                <span class="badge bg-success">Finished</span>
+                                <span class="badge" style="background-color: #0B7007;">Finished</span>
                             {% endif %}
                         </td>
                         
@@ -120,6 +133,9 @@
                         <td colspan="5" class="text-center py-5 text-muted">
                             <h5>No items match your filters.</h5>
                             <p>Try clearing your filters or click "+ Add New Item" to expand your backlog.</p>
+                            {% if search_query %}
+                                <a href="{% url 'pile' %}" class="btn btn-outline-light mt-2">Clear Search</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
