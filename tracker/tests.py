@@ -1,19 +1,28 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.contrib.auth.models import User
 from .models import MediaItem
 
-class SisyphusShelfTests(TestCase):
+class SisyphusTests(TestCase):
     
     def setUp(self):
-        # This runs before every test to set up a fake "test" database item
+        # 1. Create a fake user for the test
+        self.user = User.objects.create_user(username='testuser', password='password123')
+        
+        # 2. Force the test client to log in as that user!
+        self.client.force_login(self.user)
+        
+        # 3. Create our fake test item, and make sure it belongs to the logged-in user!
         self.test_item = MediaItem.objects.create(
             title="Elden Ring",
             creator="FromSoftware",
+            genre="Action RPG",
             media_type="Game",
             status="Backlog",
             priority_flag=True,
             rating=5,
-            notes="Need to beat the DLC."
+            notes="Need to beat the DLC.",
+            user=self.user 
         )
 
     def test_dashboard_loads_properly(self):
@@ -37,14 +46,16 @@ class SisyphusShelfTests(TestCase):
         
         # Check that the database is now empty
         self.assertEqual(MediaItem.objects.count(), 0)
+
     def test_item_update(self):
         """Test 4: Does the update form successfully change the item's data?"""
         # Send a POST request to the item_detail view with new data
         response = self.client.post(reverse('item_detail', args=[self.test_item.pk]), {
             'title': 'Elden Ring',
             'creator': 'FromSoftware',
+            'genre': 'Action RPG',
             'media_type': 'Game',
-            'status': 'Finished', # Changing from Backlog to Finished!
+            'status': 'Finished',  # Changing from Backlog to Finished!
             'rating': 5,
             'notes': 'Finally beat the DLC.'
         })
@@ -54,6 +65,7 @@ class SisyphusShelfTests(TestCase):
         
         # Verify the status actually changed
         self.assertEqual(self.test_item.status, 'Finished')
+
     def test_search_functionality(self):
         """Test 5: Does the search bar actually filter items?"""
         # Search for something that exists

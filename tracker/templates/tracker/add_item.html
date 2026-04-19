@@ -18,7 +18,7 @@
                 <form action="{% url 'add_item' %}" method="POST">
                     {% csrf_token %}
 
-                    <div class="row g-3">
+                   <div class="row g-3">
                         <div class="col-md-12 mb-2">
                             <label class="form-label fw-bold">Title</label>
                             {{ form.title }}
@@ -27,6 +27,11 @@
                         <div class="col-md-12 mb-2">
                             <label class="form-label fw-bold">Creator (Author, Director, Studio)</label>
                             {{ form.creator }}
+                        </div>
+
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">Genre (Optional)</label>
+                            {{ form.genre }}
                         </div>
 
                         <div class="col-md-6 mb-2">

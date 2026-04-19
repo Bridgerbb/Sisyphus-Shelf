@@ -21,7 +21,7 @@
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
             
             <input type="text" name="q" class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill rounded-end-0 ps-4" 
-                   placeholder="Search by title or creator..." value="{{ search_query|default_if_none:'' }}">
+                   placeholder="Search by title, creator, or genre..." value="{{ search_query|default_if_none:'' }}">
             <button class="btn btn-outline-light rounded-pill rounded-start-0 px-4" type="submit">🔍 Search</button>
         </form>
     </div>
@@ -96,7 +96,12 @@
                                 <span class="badge ms-2" style="background-color: #000000;">🔥 Next Up</span>
                             {% endif %}
                         </td>
-                        <td>{{ item.creator }}</td>
+                        <td>
+                            {{ item.creator }}
+                            {% if item.genre %}
+                                <br><small class="text-muted fst-italic">{{ item.genre }}</small>
+                            {% endif %}
+                        </td>
                         
                         <td>
                             <span class="badge bg-dark border border-secondary">
