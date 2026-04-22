@@ -160,4 +160,37 @@
         </div>
     </div>
 </div>
+
+{% if items.has_other_pages %}
+<div class="d-flex justify-content-center mt-4 mb-5">
+    <nav aria-label="Pile Pagination">
+        <ul class="pagination shadow-sm" data-bs-theme="dark">
+            
+            {% if items.has_previous %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                        &laquo; Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link bg-secondary text-white border-secondary fw-bold">
+                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if items.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                        Next &raquo;
+                    </a>
+                </li>
+            {% endif %}
+            
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
 {% endblock %}
