@@ -25,7 +25,7 @@ class MediaItem(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Backlog')
     
     priority_flag = models.BooleanField(default=False)
-    rating = models.IntegerField(null=True, blank=True)
+    rating = models.FloatField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

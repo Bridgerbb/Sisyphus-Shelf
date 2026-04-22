@@ -12,7 +12,12 @@ class MediaItemForm(forms.ModelForm):
             'genre': forms.TextInput(attrs={'class': 'form-control bg-dark text-white border-secondary', 'placeholder': 'e.g.  Fantasy'}),
             'media_type': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
-            'rating': forms.Select(attrs={'class': 'form-select'}),
+            'rating': forms.NumberInput(attrs={
+                'class': 'form-control bg-dark text-white border-secondary', 
+                'step': '0.1', 
+                'min': '0', 
+                'max': '10',
+                'placeholder': 'e.g.  9.5/10'}),
             'priority_flag': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Why do you want to play/read/watch this?'}),
         }
