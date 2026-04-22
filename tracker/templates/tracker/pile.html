@@ -16,60 +16,67 @@
 
 <div class="row mb-4">
     <div class="col-12">
-        <form method="GET" action="{% url 'pile' %}" class="d-flex shadow-sm">
+        <form method="GET" action="{% url 'pile' %}" class="d-flex shadow-sm gap-2">
             {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
             
-            <input type="text" name="q" class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill rounded-end-0 ps-4" 
+            <input type="text" name="q" class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill ps-4" 
                    placeholder="Search by title, creator, or genre..." value="{{ search_query|default_if_none:'' }}">
-            <button class="btn btn-outline-light rounded-pill rounded-start-0 px-4" type="submit">🔍 Search</button>
+            
+            <select name="sort" class="form-select form-select-lg bg-dark text-white border-secondary rounded-pill" style="max-width: 220px;" onchange="this.form.submit()">
+                <option value="">Sort by Default</option>
+                <option value="highest" {% if current_sort == 'highest' %}selected{% endif %}>⭐ Highest Rated</option>
+                <option value="lowest" {% if current_sort == 'lowest' %}selected{% endif %}>⭐ Lowest Rated</option>
+            </select>
+
+            <button class="btn btn-outline-light rounded-pill px-4" type="submit">🔍 Search</button>
         </form>
     </div>
 </div>
 
 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
     
-    <a href="{% url 'pile' %}" 
+    <a href="{% url 'pile' %}{% if current_sort %}?sort={{ current_sort }}{% endif %}" 
        class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
        🌐 All
     </a>
     
     {% if current_type == 'Book' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
+        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
     {% endif %}
 
     {% if current_type == 'Movie' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
+        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
     {% endif %}
 
     {% if current_type == 'Game' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
+        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
     {% endif %}
 
     {% if current_type == 'Other' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
+        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
     {% else %}
-        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
+        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
     {% endif %}
 
     <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
 
     {% if current_status == 'Unfinished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
     {% else %}
-        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
+        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
     {% endif %}
 
     {% if current_status == 'Finished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
+        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
     {% else %}
-        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
+        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
     {% endif %}
 
 </div>
@@ -90,10 +97,14 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td class="ps-4 fw-bold">
+                        <td class="ps-4 fw-bold text-break" style="max-width: 250px;">
                             {{ item.title }}
                             {% if item.priority_flag %}
-                                <span class="badge ms-2" style="background-color: #000000;">🔥 Next Up</span>
+                                <span class="badge ms-2 text-nowrap" style="background-color: #000000;">🔥 Next Up</span>
+                            {% endif %}
+                            
+                            {% if item.rating %}
+                                <div class="text-warning small mt-1">⭐ {{ item.rating }}/10</div>
                             {% endif %}
                         </td>
                         <td>

@@ -1,21 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Case, When, Value, IntegerField, Q
+from django.db.models import Case, When, Value, IntegerField, Q, F # <-- NEW: F imported here!
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required # <-- NEW: Import the security lock
+from django.contrib.auth.decorators import login_required
 from .forms import MediaItemForm
 from .models import MediaItem
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+import json
+from django.http import JsonResponse
 
-# <-- NEW: Slap this lock on every single view! -->
 @login_required
 def dashboard(request):
-    # <-- NEW: Filter everything by request.user so they only see their own stats -->
     total_backlog = MediaItem.objects.filter(user=request.user, status='Backlog').count()
     in_progress = MediaItem.objects.filter(user=request.user, status='In-Progress').count()
     finished = MediaItem.objects.filter(user=request.user, status='Finished').count()
     
-    priority_items = MediaItem.objects.filter(user=request.user, priority_flag=True).exclude(status='Finished').order_by('-created_at')[:5]
+    priority_items = MediaItem.objects.filter(user=request.user, priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
     
     context = {
         'total_backlog': total_backlog,
@@ -30,8 +30,8 @@ def pile(request):
     filter_type = request.GET.get('type')
     filter_status = request.GET.get('status')
     search_query = request.GET.get('q')
+    sort_by = request.GET.get('sort', '') # <-- NEW: Get the sort option
     
-    # <-- NEW: Start the query by instantly filtering out everyone else's items -->
     all_items = MediaItem.objects.filter(user=request.user).annotate(
         custom_order=Case(
             When(status='In-Progress', then=Value(0)), 
@@ -39,7 +39,7 @@ def pile(request):
             When(status='Finished', then=Value(2)),    
             output_field=IntegerField(),
         )
-    ).order_by('custom_order', 'created_at') 
+    )
 
     if search_query:
         all_items = all_items.filter(
@@ -55,12 +55,23 @@ def pile(request):
         all_items = all_items.filter(status='Finished')
     elif filter_status == 'Unfinished':
         all_items = all_items.exclude(status='Finished')
+
+    # <-- NEW: Apply Sorting Logic -->
+    if sort_by == 'highest':
+        # Using F() with nulls_last=True stops blank ratings from appearing at the top!
+        all_items = all_items.order_by(F('rating').desc(nulls_last=True), 'custom_order', 'created_at')
+    elif sort_by == 'lowest':
+        all_items = all_items.order_by(F('rating').asc(nulls_last=True), 'custom_order', 'created_at')
+    else:
+        # Default fallback ordering
+        all_items = all_items.order_by('custom_order', 'created_at')
     
     context = {
         'items': all_items,
         'current_type': filter_type,
         'current_status': filter_status,
-        'search_query': search_query 
+        'search_query': search_query,
+        'current_sort': sort_by # <-- NEW: Pass back so template remembers
     }
     
     return render(request, 'tracker/pile.html', context)
@@ -70,7 +81,6 @@ def add_item(request):
     if request.method == 'POST':
         form = MediaItemForm(request.POST)
         if form.is_valid():
-            # <-- NEW: Pause the save, attach the logged-in user, then save to DB! -->
             item = form.save(commit=False)
             item.user = request.user
             item.save()
@@ -83,7 +93,6 @@ def add_item(request):
 
 @login_required
 def item_detail(request, pk):
-    # <-- NEW: Make sure the item belongs to request.user so they can't hack the URL! -->
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
     
     if request.method == 'POST':
@@ -103,7 +112,6 @@ def item_detail(request, pk):
 
 @login_required
 def delete_item(request, pk):
-    # <-- Secure the delete route too -->
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
     
     if request.method == 'POST':
@@ -118,10 +126,24 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user) # Automatically log them in after signing up
+            login(request, user)
             messages.success(request, f"Welcome to The Pile, {user.username}!")
             return redirect('dashboard')
     else:
         form = UserCreationForm()
     
     return render(request, 'tracker/register.html', {'form': form})
+
+@login_required
+def update_queue_order(request):
+    if request.method == 'POST':
+        # 1. Catch the data packet sent by our JavaScript
+        data = json.loads(request.body)
+        ordered_ids = data.get('ordered_ids', [])
+        
+        # 2. Loop through the IDs and update their queue_order in the database
+        for index, item_id in enumerate(ordered_ids):
+            MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
+            
+        # 3. Send a silent 'success' message back to the browser
+        return JsonResponse({'status': 'success'})

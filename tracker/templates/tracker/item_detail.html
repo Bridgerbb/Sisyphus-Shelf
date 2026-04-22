@@ -12,26 +12,28 @@
                 <h1 class="display-5 fw-bold mb-1">{{ item.title }}</h1>
                 <h5 class="text-muted mb-3">{{ item.creator }}</h5>
                 
-                <div class="d-flex justify-content-center gap-2">
-                    <span class="badge bg-secondary fs-6">
+                <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+    
+                    <span class="badge bg-dark border border-secondary fs-6 py-2 px-3">
                         {% if item.media_type == 'Book' %}📚
                         {% elif item.media_type == 'Movie' %}🎬
                         {% elif item.media_type == 'Game' %}🎮
                         {% else %}📦{% endif %}
                         {{ item.get_media_type_display }}
                     </span>
-                    
+
                     {% if item.status == 'Backlog' %}
-                        <span class="badge bg-danger fs-6">Backlog</span>
+                        <span class="badge fs-6 py-2 px-3" style="background-color: #045C63;">Backlog</span>
                     {% elif item.status == 'In-Progress' %}
-                        <span class="badge bg-warning text-dark fs-6">In-Progress</span>
+                        <span class="badge fs-6 py-2 px-3" style="background-color: #610536;">In-Progress</span>
                     {% else %}
-                        <span class="badge bg-success fs-6">Finished</span>
+                        <span class="badge fs-6 py-2 px-3" style="background-color: #0B7007;">Finished</span>
+                    {% endif %}
+
+                    {% if item.priority_flag %}
+                        <span class="badge fs-6 py-2 px-3" style="background-color: #000000;">🔥 Next Up</span>
                     {% endif %}
                     
-                    {% if item.priority_flag %}
-                        <span class="badge bg-danger fs-6 border border-light">🔥 High Priority</span>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -128,4 +130,27 @@
         </div>
     </div>
 </div>
+<script>
+    // 1. Grab the Status Dropdown and the Priority Switch
+    const statusSelect = document.getElementById('id_status');
+    const prioritySwitch = document.getElementById('id_priority_flag');
+
+    // 2. Define a function that checks the status and disables the switch
+    function togglePrioritySwitch() {
+        if (statusSelect.value === 'Finished') {
+            prioritySwitch.checked = false; // Uncheck it
+            prioritySwitch.disabled = true; // Lock it
+        } else {
+            prioritySwitch.disabled = false; // Unlock it
+        }
+    }
+
+    if (statusSelect && prioritySwitch) {
+        // 3. Run it once when the page loads (in case it's already Finished)
+        togglePrioritySwitch();
+        
+        // 4. Listen for any changes the user makes to the dropdown!
+        statusSelect.addEventListener('change', togglePrioritySwitch);
+    }
+</script>
 {% endblock %}

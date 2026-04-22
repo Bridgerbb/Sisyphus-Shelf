@@ -75,3 +75,37 @@ class SisyphusTests(TestCase):
         # Search for something that doesn't exist
         response_empty = self.client.get(reverse('pile') + '?q=Zelda')
         self.assertNotContains(response_empty, 'Elden Ring')
+        
+    def test_finished_status_removes_priority(self):
+        """Test 6: Does marking an item as Finished automatically strip the priority flag?"""
+        # We start with our test_item which is currently marked as priority
+        self.test_item.status = 'Finished'
+        self.test_item.save() # This triggers our custom save() method
+        
+        self.assertFalse(self.test_item.priority_flag)
+
+    def test_queue_order_api(self):
+        """Test 7: Does the hidden API correctly update queue order?"""
+        import json
+        
+        # Create a second item so we can swap their order
+        item2 = MediaItem.objects.create(
+            title="Dune", creator="Frank Herbert", media_type="Book", 
+            status="Backlog", user=self.user
+        )
+        
+        # Simulate our JavaScript sending a silent POST request with the new order
+        response = self.client.post(reverse('update_queue_order'), 
+                                    data=json.dumps({'ordered_ids': [item2.id, self.test_item.id]}),
+                                    content_type='application/json')
+        
+        # Check that the API responded with a success code
+        self.assertEqual(response.status_code, 200)
+        
+        # Refresh the items from the database
+        item2.refresh_from_db()
+        self.test_item.refresh_from_db()
+        
+        # Ensure Dune is now in position 0, and Elden Ring is in position 1
+        self.assertEqual(item2.queue_order, 0)
+        self.assertEqual(self.test_item.queue_order, 1)
