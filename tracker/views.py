@@ -8,7 +8,14 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 import json
 from django.http import JsonResponse
-from django.core.paginator import Paginator # <-- NEW: Import the Paginator!
+from django.core.paginator import Paginator
+import os
+import requests
+from django.http import JsonResponse
+from dotenv import load_dotenv
+from django.shortcuts import render
+
+load_dotenv()
 
 @login_required
 def dashboard(request):
@@ -147,3 +154,69 @@ def update_queue_order(request):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
             
         return JsonResponse({'status': 'success'})
+    
+def search_tmdb(request):
+    query = request.GET.get('q')
+    api_key = os.getenv('TMDB_API_KEY')
+    
+    if not query:
+        return JsonResponse({'error': 'No query provided'}, status=400)
+
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
+    response = requests.get(url)
+    data = response.json()
+
+    # We just want the top 5 results to keep it simple
+    results = data.get('results', [])[:5]
+    
+    # Format the data for our frontend
+    formatted_results = []
+    for item in results:
+        formatted_results.append({
+            'title': item.get('title'),
+            'release_date': item.get('release_date', '')[:4], # Just the year
+            'poster_path': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}",
+            'overview': item.get('overview'),
+        })
+
+    return JsonResponse(formatted_results, safe=False)
+def search_metadata(request):
+    query = request.GET.get('q')
+    media_type = request.GET.get('type') # 'movie' or 'book'
+    
+    if not query:
+        return JsonResponse([], safe=False)
+
+    results = []
+
+    # MOVIE SEARCH (TMDB)
+    if media_type == 'movie':
+        api_key = os.getenv('TMDB_API_KEY')
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            for item in response.json().get('results', [])[:5]:
+                results.append({
+                    'title': item.get('title'),
+                    'creator': 'Movie', # Defaulting for now
+                    'genre': 'Film',
+                    'image': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else "",
+                    'description': item.get('overview', '')
+                })
+
+    # BOOK SEARCH (Google Books)
+    elif media_type == 'book':
+        url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            for item in response.json().get('items', [])[:5]:
+                info = item.get('volumeInfo', {})
+                results.append({
+                    'title': info.get('title'),
+                    'creator': ", ".join(info.get('authors', ['Unknown Author'])),
+                    'genre': ", ".join(info.get('categories', ['Book'])),
+                    'image': info.get('imageLinks', {}).get('thumbnail', '').replace('http://', 'https://'),
+                    'description': info.get('description', '')
+                })
+
+    return JsonResponse(results, safe=False)

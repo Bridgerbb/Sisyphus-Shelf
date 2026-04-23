@@ -23,7 +23,12 @@
                             <label class="form-label fw-bold">Title</label>
                             {{ form.title }}
                         </div>
+                            <div class="input-group mb-3">
+                                <input type="text" id="id_title" name="title" class="form-control" placeholder="Enter title...">
+                                <button class="btn btn-outline-primary" type="button" id="lookup-btn">🔍 Lookup</button>
+                            </div>
 
+                            <div id="search-results" class="list-group mb-3 shadow-sm" style="display:none;"></div>
                         <div class="col-md-12 mb-2">
                             <label class="form-label fw-bold">Creator (Author, Director, Studio)</label>
                             {{ form.creator }}
@@ -74,4 +79,43 @@
 
     </div>
 </div>
+<script>
+document.getElementById('lookup-btn').addEventListener('click', function() {
+    const title = document.getElementById('id_title').value;
+    const type = document.querySelector('select[name="media_type"]').value; // Assumes your select is named media_type
+    const resultsDiv = document.getElementById('search-results');
+
+    if (!title) return alert("Type a title first!");
+
+    resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
+    resultsDiv.style.display = 'block';
+
+    fetch(`/api/search-metadata/?q=${encodeURIComponent(title)}&type=${type.toLowerCase()}`)
+        .then(response => response.json())
+        .then(data => {
+            resultsDiv.innerHTML = '';
+            if (data.length === 0) {
+                resultsDiv.innerHTML = '<div class="list-group-item">No matches found.</div>';
+                return;
+            }
+            data.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'list-group-item list-group-item-action d-flex align-items-center';
+                btn.innerHTML = `
+                    <img src="${item.image}" style="width:40px;" class="me-3">
+                    <div><strong>${item.title}</strong><br><small>${item.creator}</small></div>
+                `;
+                btn.onclick = function() {
+                    // AUTO-FILL THE FORM!
+                    document.getElementById('id_title').value = item.title;
+                    document.querySelector('input[name="creator"]').value = item.creator;
+                    document.querySelector('input[name="genre"]').value = item.genre;
+                    // Optional: You can save the image URL or description too!
+                    resultsDiv.style.display = 'none';
+                };
+                resultsDiv.appendChild(btn);
+            });
+        });
+});
+</script>
 {% endblock %}
