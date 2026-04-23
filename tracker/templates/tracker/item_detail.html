@@ -50,8 +50,19 @@
             <div class="card-body p-4 p-md-5">
                 <h4 class="fw-bold border-bottom pb-3 mb-4 text-dark">Edit Item Details</h4>
                 
+                <div class="p-3 rounded mb-4 border" style="background-color: rgba(0,0,0,0.05);">
+                    <label class="form-label fw-bold text-dark small text-uppercase">Auto-Update from Web</label>
+                    <div class="input-group">
+                        <input type="text" id="metadata-search-input" class="form-control" placeholder="Search for better cover/info...">
+                        <button class="btn btn-dark" type="button" id="lookup-btn">🔍 Lookup</button>
+                    </div>
+                    <div id="search-results" class="list-group shadow mt-2" style="display: none; position: absolute; z-index: 1000; width: 80%; max-width: 600px;"></div>
+                </div>
+
                 <form action="{% url 'item_detail' item.pk %}" method="POST">
                     {% csrf_token %}
+                    
+                    <input type="hidden" name="cover_image_url" id="id_cover_image_url" value="{{ item.cover_image_url }}">
 
                     <div class="row g-3 text-dark">
                         <div class="col-md-6">
@@ -136,6 +147,60 @@
 </div>
 
 <script>
+    // --- METADATA SEARCH LOGIC ---
+    const lookupBtn = document.getElementById('lookup-btn');
+    if (lookupBtn) {
+        lookupBtn.addEventListener('click', function() {
+            const query = document.getElementById('metadata-search-input').value;
+            const typeField = document.getElementById('id_media_type');
+            const type = typeField ? typeField.value.toLowerCase() : '';
+            const resultsDiv = document.getElementById('search-results');
+
+            if (!query) return;
+
+            resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
+            resultsDiv.style.display = 'block';
+
+            fetch(`/api/search-metadata/?q=${encodeURIComponent(query)}&type=${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<div class="list-group-item">No results found</div>';
+                        return;
+                    }
+                    data.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
+                        btn.innerHTML = `
+                            <img src="${item.image}" style="width: 40px;" class="rounded shadow-sm">
+                            <div><div class="fw-bold">${item.title}</div><small class="text-muted">${item.creator}</small></div>
+                        `;
+                        btn.onclick = () => {
+                            // Fills the form fields automatically
+                            document.getElementById('id_title').value = item.title;
+                            document.getElementById('id_creator').value = item.creator;
+                            document.getElementById('id_genre').value = item.genre;
+                            document.getElementById('id_cover_image_url').value = item.image;
+                            
+                            resultsDiv.style.display = 'none';
+                            alert("Fields updated! Click 'Save Changes' at the bottom to finalize.");
+                        };
+                        resultsDiv.appendChild(btn);
+                    });
+                });
+        });
+
+        // Close results if you click away
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#metadata-search-input') && !e.target.closest('#lookup-btn') && !e.target.closest('#search-results')) {
+                const resultsDiv = document.getElementById('search-results');
+                if (resultsDiv) resultsDiv.style.display = 'none';
+            }
+        });
+    }
+
     // Logic to lock the Priority switch if item is finished
     const statusSelect = document.getElementById('id_status');
     const prioritySwitch = document.getElementById('id_priority_flag');
