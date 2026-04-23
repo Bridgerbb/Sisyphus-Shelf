@@ -1,82 +1,87 @@
 {% extends 'tracker/base.html' %}
 {% load static %}
 
-{% block bg_image %}{% static 'tracker/art.gif' %}{% endblock %}
+{% block bg_image %}{% static 'tracker/Continuous.gif' %}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center mt-4 mb-5">
-    <div class="col-lg-8 col-md-10">
+    <div class="col-lg-10">
         
-        <div class="card bg-dark text-white shadow border-secondary mb-4">
-            <div class="card-body p-4 text-center">
-                <h1 class="display-5 fw-bold mb-1">{{ item.title }}</h1>
-                <h5 class="text-muted mb-3">{{ item.creator }}</h5>
-                
-                <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-    
-                    <span class="badge bg-dark border border-secondary fs-6 py-2 px-3">
-                        {% if item.media_type == 'Book' %}📚
-                        {% elif item.media_type == 'Movie' %}🎬
-                        {% elif item.media_type == 'Game' %}🎮
-                        {% else %}📦{% endif %}
-                        {{ item.get_media_type_display }}
-                    </span>
-
-                    {% if item.status == 'Backlog' %}
-                        <span class="badge fs-6 py-2 px-3" style="background-color: #045C63;">Backlog</span>
-                    {% elif item.status == 'In-Progress' %}
-                        <span class="badge fs-6 py-2 px-3" style="background-color: #610536;">In-Progress</span>
+        <div class="card bg-dark text-white shadow border-secondary mb-4 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-3">
+                    {% if item.cover_image_url %}
+                        <img src="{{ item.cover_image_url }}" class="img-fluid rounded shadow-lg" alt="Cover" style="max-height: 400px;">
                     {% else %}
-                        <span class="badge fs-6 py-2 px-3" style="background-color: #0B7007;">Finished</span>
+                        <div class="text-muted text-center py-5">
+                            <h1 class="display-1">🖼️</h1>
+                            <p>No Cover Art Found</p>
+                        </div>
                     {% endif %}
+                </div>
 
-                    {% if item.priority_flag %}
-                        <span class="badge fs-6 py-2 px-3" style="background-color: #000000;">🔥 Next Up</span>
-                    {% endif %}
-                    
+                <div class="col-md-8 d-flex align-items-center">
+                    <div class="card-body p-4 p-md-5">
+                        <h1 class="display-4 fw-bold mb-1">{{ item.title }}</h1>
+                        <h4 class="text-muted mb-4">{{ item.creator }}</h4>
+                        
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-dark border border-secondary fs-6 py-2 px-3">
+                                {% if item.media_type == 'Book' %}📚 Book
+                                {% elif item.media_type == 'Movie' %}🎬 Movie
+                                {% elif item.media_type == 'Game' %}🎮 Game
+                                {% else %}📦 Other{% endif %}
+                            </span>
+
+                            <span class="badge fs-6 py-2 px-3 {% if item.status == 'Finished' %}bg-success{% elif item.status == 'In-Progress' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                                {{ item.get_status_display }}
+                            </span>
+
+                            {% if item.priority_flag %}
+                                <span class="badge bg-black border border-danger text-danger fs-6 py-2 px-3">🔥 High Priority</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4 p-md-5">
-                <h4 class="fw-bold border-bottom pb-3 mb-4">Update Item Details</h4>
+                <h4 class="fw-bold border-bottom pb-3 mb-4 text-dark">Edit Item Details</h4>
                 
                 <form action="{% url 'item_detail' item.pk %}" method="POST">
                     {% csrf_token %}
 
-                    <div class="row g-3">
-                        <div class="col-md-12 mb-2">
+                    <div class="row g-3 text-dark">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Title</label>
                             {{ form.title }}
                         </div>
-
-                        <div class="col-md-12 mb-2">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Creator</label>
                             {{ form.creator }}
                         </div>
 
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label fw-bold">Genre (Optional)</label>
-                            {{ form.genre }}
-                        </div>
-
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">📺 Media Type</label>
                             {{ form.media_type }}
                         </div>
-
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">⏳ Current Status</label>
                             {{ form.status }}
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">🏷️ Genre</label>
+                            {{ form.genre }}
+                        </div>
 
-                        <div class="col-md-12 mb-2">
-                            <label class="form-label fw-bold">⭐ Rating</label>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">⭐ Rating (1-10)</label>
                             {{ form.rating }}
                         </div>
 
-                        <div class="col-md-12 mb-2">
+                        <div class="col-md-12">
                             <div class="form-check form-switch mt-2">
                                 {{ form.priority_flag }}
                                 <label class="form-check-label fw-bold text-danger" for="{{ form.priority_flag.id_for_label }}">
@@ -85,19 +90,19 @@
                             </div>
                         </div>
 
-                        <div class="col-md-12 mb-3 mt-4">
-                            <label class="form-label fw-bold">📝 Personal Notes</label>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold mt-3">📝 Personal Notes</label>
                             {{ form.notes }}
                         </div>
 
-                        <div class="col-12 mt-4 d-flex justify-content-between">
+                        <div class="col-12 mt-4 d-flex justify-content-between border-top pt-4">
                             <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 Delete Item
                             </button>
                             
                             <div>
                                 <a href="{% url 'pile' %}" class="btn btn-light px-4 border">Cancel</a>
-                                <button type="submit" class="btn btn-primary px-5">Save Changes</button>
+                                <button type="submit" class="btn btn-primary px-5 shadow">Save Changes</button>
                             </div>
                         </div>
                     </div>
@@ -108,20 +113,19 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title text-danger fw-bold" id="deleteModalLabel">⚠️ Confirm Deletion</h5>
+                <h5 class="modal-title text-danger fw-bold">⚠️ Confirm Deletion</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Are you completely sure you want to delete <strong>{{ item.title }}</strong>? <br><br>
-                This action cannot be undone, and Sisyphus will be very disappointed in you.
+                This action cannot be undone, and Sisyphus will be very disappointed.
             </div>
             <div class="modal-footer border-secondary">
                 <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                
                 <form action="{% url 'delete_item' item.pk %}" method="POST">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger px-4">Yes, Delete It</button>
@@ -130,26 +134,23 @@
         </div>
     </div>
 </div>
+
 <script>
-    // 1. Grab the Status Dropdown and the Priority Switch
+    // Logic to lock the Priority switch if item is finished
     const statusSelect = document.getElementById('id_status');
     const prioritySwitch = document.getElementById('id_priority_flag');
 
-    // 2. Define a function that checks the status and disables the switch
     function togglePrioritySwitch() {
         if (statusSelect.value === 'Finished') {
-            prioritySwitch.checked = false; // Uncheck it
-            prioritySwitch.disabled = true; // Lock it
+            prioritySwitch.checked = false;
+            prioritySwitch.disabled = true;
         } else {
-            prioritySwitch.disabled = false; // Unlock it
+            prioritySwitch.disabled = false;
         }
     }
 
     if (statusSelect && prioritySwitch) {
-        // 3. Run it once when the page loads (in case it's already Finished)
         togglePrioritySwitch();
-        
-        // 4. Listen for any changes the user makes to the dropdown!
         statusSelect.addEventListener('change', togglePrioritySwitch);
     }
 </script>

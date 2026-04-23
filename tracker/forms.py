@@ -4,7 +4,7 @@ from .models import MediaItem
 class MediaItemForm(forms.ModelForm):
     class Meta:
         model = MediaItem
-        fields = ['title', 'creator','genre', 'media_type', 'status', 'priority_flag', 'rating', 'notes', 'cover_image_url']
+        fields = ['media_type','title', 'creator','genre', 'status', 'priority_flag', 'rating', 'notes', 'cover_image_url']
     # This tells Django to use Bootstrap CSS classes for the HTML inputs
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g.  The Lord of the Rings'}),
