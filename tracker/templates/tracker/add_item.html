@@ -4,10 +4,8 @@
 {% block bg_image %}{% static 'tracker/pile.gif' %}{% endblock %}
 
 {% block content %}
-    
 <div class="row justify-content-center mt-4">
     <div class="col-lg-8 col-md-10">
-        
         <div class="mb-4 text-center">
             <h1 class="display-6 fw-bold">Add to Shelf</h1>
             <p class="text-muted">Log a new book, movie, or game into your backlog.</p>
@@ -18,17 +16,16 @@
                 <form action="{% url 'add_item' %}" method="POST">
                     {% csrf_token %}
 
-                   <div class="row g-3">
+                    <div class="row g-3">
                         <div class="col-md-12 mb-2">
                             <label class="form-label fw-bold">Title</label>
-                            {{ form.title }}
-                        </div>
-                            <div class="input-group mb-3">
-                                <input type="text" id="id_title" name="title" class="form-control" placeholder="Enter title...">
+                            <div class="input-group">
+                                <input type="text" id="id_title" name="title" class="form-control" placeholder="Search for a title..." required>
                                 <button class="btn btn-outline-primary" type="button" id="lookup-btn">🔍 Lookup</button>
                             </div>
+                            <div id="search-results" class="list-group shadow-sm mt-1" style="display:none; position: absolute; z-index: 1000; width: 95%;"></div>
+                        </div>
 
-                            <div id="search-results" class="list-group mb-3 shadow-sm" style="display:none;"></div>
                         <div class="col-md-12 mb-2">
                             <label class="form-label fw-bold">Creator (Author, Director, Studio)</label>
                             {{ form.creator }}
@@ -41,8 +38,7 @@
 
                         <div class="col-md-6 mb-2">
                             <label class="form-label fw-bold">📺 Media Type</label>
-                            {{ form.media_type }}
-                        </div>
+                            {{ form.media_type }} </div>
 
                         <div class="col-md-6 mb-2">
                             <label class="form-label fw-bold">⏳ Current Status</label>
@@ -76,16 +72,21 @@
                 </form>
             </div>
         </div>
-
     </div>
 </div>
+
 <script>
 document.getElementById('lookup-btn').addEventListener('click', function() {
-    const title = document.getElementById('id_title').value;
-    const type = document.querySelector('select[name="media_type"]').value; // Assumes your select is named media_type
+    const titleInput = document.getElementById('id_title');
+    // Django forms usually give the media_type field the ID 'id_media_type'
+    const typeSelect = document.getElementById('id_media_type');
     const resultsDiv = document.getElementById('search-results');
 
+    const title = titleInput.value;
+    const type = typeSelect ? typeSelect.value : '';
+
     if (!title) return alert("Type a title first!");
+    if (!type) return alert("Select a Media Type first!");
 
     resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
     resultsDiv.style.display = 'block';
@@ -95,27 +96,46 @@ document.getElementById('lookup-btn').addEventListener('click', function() {
         .then(data => {
             resultsDiv.innerHTML = '';
             if (data.length === 0) {
-                resultsDiv.innerHTML = '<div class="list-group-item">No matches found.</div>';
+                resultsDiv.innerHTML = '<div class="list-group-item text-muted">No matches found. Try a broader search.</div>';
                 return;
             }
             data.forEach(item => {
                 const btn = document.createElement('button');
-                btn.className = 'list-group-item list-group-item-action d-flex align-items-center';
+                btn.type = 'button'; // Prevent form submission
+                btn.className = 'list-group-item list-group-item-action d-flex align-items-center py-2';
                 btn.innerHTML = `
-                    <img src="${item.image}" style="width:40px;" class="me-3">
-                    <div><strong>${item.title}</strong><br><small>${item.creator}</small></div>
+                    <img src="${item.image || '{% static "tracker/icon.png" %}'}" style="width:45px; height:65px; object-fit: cover;" class="me-3 rounded shadow-sm">
+                    <div>
+                        <div class="fw-bold">${item.title}</div>
+                        <small class="text-muted">${item.creator} • ${item.genre}</small>
+                    </div>
                 `;
                 btn.onclick = function() {
                     // AUTO-FILL THE FORM!
                     document.getElementById('id_title').value = item.title;
-                    document.querySelector('input[name="creator"]').value = item.creator;
-                    document.querySelector('input[name="genre"]').value = item.genre;
-                    // Optional: You can save the image URL or description too!
+                    // Django forms use 'id_creator' and 'id_genre'
+                    const creatorField = document.getElementById('id_creator');
+                    const genreField = document.getElementById('id_genre');
+                    
+                    if(creatorField) creatorField.value = item.creator;
+                    if(genreField) genreField.value = item.genre;
+                    
                     resultsDiv.style.display = 'none';
                 };
                 resultsDiv.appendChild(btn);
             });
+        })
+        .catch(err => {
+            resultsDiv.innerHTML = '<div class="list-group-item text-danger">Error connecting to server.</div>';
+            console.error(err);
         });
+});
+
+// Close results if clicking outside
+document.addEventListener('click', function(e) {
+    if (!document.getElementById('search-results').contains(e.target) && e.target.id !== 'lookup-btn') {
+        document.getElementById('search-results').style.display = 'none';
+    }
 });
 </script>
 {% endblock %}
