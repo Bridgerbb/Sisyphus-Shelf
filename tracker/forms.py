@@ -4,7 +4,7 @@ from .models import MediaItem
 class MediaItemForm(forms.ModelForm):
     class Meta:
         model = MediaItem
-        fields = ['title', 'creator','genre', 'media_type', 'status', 'priority_flag', 'rating', 'notes']
+        fields = ['title', 'creator','genre', 'media_type', 'status', 'priority_flag', 'rating', 'notes', 'cover_image_url']
     # This tells Django to use Bootstrap CSS classes for the HTML inputs
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g.  The Lord of the Rings'}),
@@ -20,4 +20,5 @@ class MediaItemForm(forms.ModelForm):
                 'placeholder': 'e.g.  9.5/10'}),
             'priority_flag': forms.CheckboxInput(attrs={'class': 'form-check-input', 'role': 'switch'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Why do you want to play/read/watch this?'}),
+            'cover_image_url': forms.HiddenInput(),
         }

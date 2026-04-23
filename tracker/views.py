@@ -11,11 +11,39 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 import os
 import requests
-from django.http import JsonResponse
 from dotenv import load_dotenv
-from django.shortcuts import render
 
 load_dotenv()
+
+# --- HELPER FUNCTIONS ---
+
+def get_igdb_token():
+    """
+    Automatically fetches a fresh OAuth token from Twitch.
+    This is the 'Self-Healing' part so your game search never breaks.
+    """
+    client_id = os.getenv('TWITCH_CLIENT_ID')
+    client_secret = os.getenv('TWITCH_CLIENT_SECRET')
+    
+    if not client_id or not client_secret:
+        return None
+
+    url = "https://id.twitch.tv/oauth2/token"
+    params = {
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'grant_type': 'client_credentials'
+    }
+    
+    try:
+        response = requests.post(url, params=params)
+        if response.status_code == 200:
+            return response.json().get('access_token')
+    except Exception as e:
+        print(f"Twitch Token Error: {e}")
+    return None
+
+# --- EXISTING VIEWS ---
 
 @login_required
 def dashboard(request):
@@ -71,13 +99,12 @@ def pile(request):
     else:
         all_items = all_items.order_by('custom_order', 'created_at')
     
-    # <-- NEW: Pagination Logic -->
-    paginator = Paginator(all_items, 15) # Show 15 items per page
+    paginator = Paginator(all_items, 15) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
     context = {
-        'items': page_obj, # <-- Pass page_obj instead of all_items
+        'items': page_obj, 
         'current_type': filter_type,
         'current_status': filter_status,
         'search_query': search_query,
@@ -93,18 +120,19 @@ def add_item(request):
         if form.is_valid():
             item = form.save(commit=False)
             item.user = request.user
+            # Note: cover_image_url will be saved here if it's in your Form/Model
             item.save()
-            
             messages.success(request, f"'{item.title}' was added to your pile!")
             return redirect('pile') 
     else:
         form = MediaItemForm()
     return render(request, 'tracker/add_item.html', {'form': form})
 
+# ... (Detail, Delete, Register, and UpdateQueue views remain the same) ...
+
 @login_required
 def item_detail(request, pk):
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
-    
     if request.method == 'POST':
         form = MediaItemForm(request.POST, instance=item)
         if form.is_valid():
@@ -113,22 +141,15 @@ def item_detail(request, pk):
             return redirect('pile') 
     else:
         form = MediaItemForm(instance=item)
-        
-    context = {
-        'form': form,
-        'item': item
-    }
-    return render(request, 'tracker/item_detail.html', context)
+    return render(request, 'tracker/item_detail.html', {'form': form, 'item': item})
 
 @login_required
 def delete_item(request, pk):
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
-    
     if request.method == 'POST':
         title = item.title 
         item.delete()
         messages.error(request, f"🗑️ '{title}' was permanently deleted.")
-        
     return redirect('pile')
 
 def register(request):
@@ -141,7 +162,6 @@ def register(request):
             return redirect('dashboard')
     else:
         form = UserCreationForm()
-    
     return render(request, 'tracker/register.html', {'form': form})
 
 @login_required
@@ -149,47 +169,22 @@ def update_queue_order(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         ordered_ids = data.get('ordered_ids', [])
-        
         for index, item_id in enumerate(ordered_ids):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
-            
         return JsonResponse({'status': 'success'})
-    
-def search_tmdb(request):
-    query = request.GET.get('q')
-    api_key = os.getenv('TMDB_API_KEY')
-    
-    if not query:
-        return JsonResponse({'error': 'No query provided'}, status=400)
 
-    url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
-    response = requests.get(url)
-    data = response.json()
+# --- UPDATED SEARCH METADATA (The Triple Crown) ---
 
-    # We just want the top 5 results to keep it simple
-    results = data.get('results', [])[:5]
-    
-    # Format the data for our frontend
-    formatted_results = []
-    for item in results:
-        formatted_results.append({
-            'title': item.get('title'),
-            'release_date': item.get('release_date', '')[:4], # Just the year
-            'poster_path': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}",
-            'overview': item.get('overview'),
-        })
-
-    return JsonResponse(formatted_results, safe=False)
 def search_metadata(request):
     query = request.GET.get('q')
-    media_type = request.GET.get('type') # 'movie' or 'book'
+    media_type = request.GET.get('type', '').lower()
     
     if not query:
         return JsonResponse([], safe=False)
 
     results = []
 
-    # MOVIE SEARCH (TMDB)
+    # 🎬 MOVIE SEARCH (TMDB)
     if media_type == 'movie':
         api_key = os.getenv('TMDB_API_KEY')
         url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
@@ -198,38 +193,67 @@ def search_metadata(request):
             for item in response.json().get('results', [])[:5]:
                 results.append({
                     'title': item.get('title'),
-                    'creator': 'Movie', # Defaulting for now
+                    'creator': 'Movie', 
                     'genre': 'Film',
-                    'image': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else "",
+                    'image': f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get('poster_path') else "",
                     'description': item.get('overview', '')
                 })
 
-    # BOOK SEARCH (Google Books)
+    # 📚 BOOK SEARCH (Google Books)
     elif media_type == 'book':
-            api_key = os.getenv('GOOGLE_BOOKS_KEY')
-            url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+        api_key = os.getenv('GOOGLE_BOOKS_KEY')
+        url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+        if api_key and api_key != "your_key_here":
+            url += f"&key={api_key}"
             
-            # Only add the key if it's NOT the placeholder and NOT empty
-            if api_key and api_key != "your_key_here":
-                url += f"&key={api_key}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            for item in data.get('items', [])[:5]:
+                info = item.get('volumeInfo', {})
+                image_links = info.get('imageLinks', {})
+                # Use 'thumbnail' and force HTTPS
+                image_url = image_links.get('thumbnail') or image_links.get('smallThumbnail') or ""
+                image_url = image_url.replace('http://', 'https://')
                 
-            response = requests.get(url)
+                results.append({
+                    'title': info.get('title', 'Unknown Title'),
+                    'creator': ", ".join(info.get('authors', ['Unknown Author'])),
+                    'genre': ", ".join(info.get('categories', ['Book'])),
+                    'image': image_url,
+                    'description': info.get('description', '')
+                })
+
+    # 🎮 GAME SEARCH (IGDB via Twitch)
+    elif media_type == 'game':
+        client_id = os.getenv('TWITCH_CLIENT_ID')
+        token = get_igdb_token()
+        
+        if client_id and token:
+            headers = {
+                'Client-ID': client_id,
+                'Authorization': f'Bearer {token}',
+            }
+            # IGDB uses a custom query body
+            body = f'search "{query}"; fields name, cover.url, genres.name, summary; limit 5;'
+            url = "https://api.igdb.com/v4/games"
             
+            response = requests.post(url, headers=headers, data=body)
             if response.status_code == 200:
-                data = response.json()
-                for item in data.get('items', [])[:5]:
-                    info = item.get('volumeInfo', {})
-                    image_links = info.get('imageLinks', {})
-                    # Ensuring we use HTTPS for images to avoid security warnings
-                    image_url = image_links.get('thumbnail') or image_links.get('smallThumbnail') or ""
-                    image_url = image_url.replace('http://', 'https://')
+                for item in response.json():
+                    cover_data = item.get('cover', {})
+                    # IGDB images are // protocol relative and 't_thumb' by default. 
+                    # We swap to 't_cover_big' for high quality.
+                    img_url = cover_data.get('url', '').replace('t_thumb', 't_cover_big')
+                    if img_url:
+                        img_url = "https:" + img_url
 
                     results.append({
-                        'title': info.get('title', 'Unknown Title'),
-                        'creator': ", ".join(info.get('authors', ['Unknown Author'])),
-                        'genre': ", ".join(info.get('categories', ['Book'])),
-                        'image': image_url,
-                        'description': info.get('description', '')
+                        'title': item.get('name'),
+                        'creator': "Game Studio",
+                        'genre': item.get('genres', [{}])[0].get('name', 'Game'),
+                        'image': img_url,
+                        'description': item.get('summary', '')
                     })
 
     return JsonResponse(results, safe=False)

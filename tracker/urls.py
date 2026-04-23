@@ -9,6 +9,5 @@ urlpatterns = [
     path('item/<int:pk>/delete/', views.delete_item, name='delete_item'),
     path('register/', views.register, name='register'),
     path('update-queue/', views.update_queue_order, name='update_queue_order'),
-    path('api/search-tmdb/', views.search_tmdb, name='search_tmdb'),
     path('api/search-metadata/', views.search_metadata, name='search_metadata'),
 ]

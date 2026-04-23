@@ -18,7 +18,7 @@ class MediaItem(models.Model):
         ('Other', 'Other'),
     ]
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPES)
-    
+    cover_image_url = models.URLField(max_length=500, blank=True, null=True)
     STATUS_CHOICES = [
         ('Backlog', 'Backlog'),
         ('In-Progress', 'In-Progress'),

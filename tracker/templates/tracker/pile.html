@@ -4,6 +4,24 @@
 {% block bg_image %}{% static 'tracker/art.gif' %}{% endblock %}
 
 {% block content %}
+<style>
+    /* Custom style for the thumbnails */
+    .pile-thumbnail {
+        width: 50px;
+        height: 75px;
+        object-fit: cover;
+        transition: transform 0.2s;
+    }
+    .pile-thumbnail:hover {
+        transform: scale(1.1);
+        z-index: 10;
+    }
+    .table-dark-custom {
+        background-color: rgba(0,0,0,0.4);
+        backdrop-filter: blur(5px);
+    }
+</style>
+
 <div class="row mb-4 mt-2">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
@@ -35,59 +53,31 @@
 </div>
 
 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-    
     <a href="{% url 'pile' %}{% if current_sort %}?sort={{ current_sort }}{% endif %}" 
        class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
-       🌐 All
+        🌐 All
     </a>
     
-    {% if current_type == 'Book' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📚 Books</a>
-    {% else %}
-        <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📚 Books</a>
-    {% endif %}
-
-    {% if current_type == 'Movie' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎬 Movies</a>
-    {% else %}
-        <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎬 Movies</a>
-    {% endif %}
-
-    {% if current_type == 'Game' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">🎮 Games</a>
-    {% else %}
-        <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">🎮 Games</a>
-    {% endif %}
-
-    {% if current_type == 'Other' %}
-        <a href="{% url 'pile' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">📦 Other</a>
-    {% else %}
-        <a href="{% url 'pile' %}?type=Other{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">📦 Other</a>
-    {% endif %}
-
+    {% for type_val, type_label in items.0.MEDIA_CHOICES %} {% endfor %}
+    
+    <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
+    <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Movie' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies</a>
+    <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
+    
     <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
 
-    {% if current_status == 'Unfinished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">⏳ Unfinished</a>
-    {% else %}
-        <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">⏳ Unfinished</a>
-    {% endif %}
-
-    {% if current_status == 'Finished' %}
-        <a href="{% url 'pile' %}?{% if current_type %}type={{ current_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-light text-dark fw-bolder shadow">✅ Finished</a>
-    {% else %}
-        <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="btn rounded-pill px-4 btn-outline-light opacity-75">✅ Finished</a>
-    {% endif %}
-
+    <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 {% if current_status == 'Unfinished' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">⏳ Unfinished</a>
+    <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 {% if current_status == 'Finished' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
 </div>
 
-<div class="card shadow-sm border-0">
+<div class="card shadow-sm border-0 table-dark-custom">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 text-white">
                 <thead>
-                    <tr>
-                        <th scope="col" class="ps-4">Title</th>
+                    <tr class="text-muted small text-uppercase">
+                        <th scope="col" class="ps-4" style="width: 80px;">Cover</th>
+                        <th scope="col">Title</th>
                         <th scope="col">Creator</th>
                         <th scope="col">Type</th>
                         <th scope="col">Status</th>
@@ -97,16 +87,31 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td class="ps-4 fw-bold text-break" style="max-width: 250px;">
-                            {{ item.title }}
+                        <td class="ps-4">
+                            <a href="{% url 'item_detail' item.id %}">
+                                {% if item.cover_image_url %}
+                                    <img src="{{ item.cover_image_url }}" class="pile-thumbnail rounded shadow-sm" alt="cover">
+                                {% else %}
+                                    <div class="pile-thumbnail rounded bg-secondary d-flex align-items-center justify-content-center text-white-50 small">
+                                        No Image
+                                    </div>
+                                {% endif %}
+                            </a>
+                        </td>
+
+                        <td class="fw-bold text-break" style="max-width: 250px;">
+                            <a href="{% url 'item_detail' item.id %}" class="text-decoration-none text-white">
+                                {{ item.title }}
+                            </a>
                             {% if item.priority_flag %}
-                                <span class="badge ms-2 text-nowrap" style="background-color: #000000;">🔥 Next Up</span>
+                                <span class="badge ms-2 text-nowrap" style="background-color: #ff4d4d;">🔥 Next Up</span>
                             {% endif %}
                             
                             {% if item.rating %}
                                 <div class="text-warning small mt-1">⭐ {{ item.rating }}/10</div>
                             {% endif %}
                         </td>
+
                         <td>
                             {{ item.creator }}
                             {% if item.genre %}
@@ -136,7 +141,6 @@
                         
                         <td class="text-end pe-4">
                             <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-light me-1">View</a>
-                            
                             <form action="{% url 'delete_item' item.id %}" method="POST" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ item.title|escapejs }}?');">Delete</button>
@@ -146,12 +150,9 @@
                     
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             <h5>No items match your filters.</h5>
-                            <p>Try clearing your filters or click "+ Add New Item" to expand your backlog.</p>
-                            {% if search_query %}
-                                <a href="{% url 'pile' %}" class="btn btn-outline-light mt-2">Clear Search</a>
-                            {% endif %}
+                            <a href="{% url 'pile' %}" class="btn btn-outline-light mt-2">Clear All Filters</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -165,7 +166,6 @@
 <div class="d-flex justify-content-center mt-4 mb-5">
     <nav aria-label="Pile Pagination">
         <ul class="pagination shadow-sm" data-bs-theme="dark">
-            
             {% if items.has_previous %}
                 <li class="page-item">
                     <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
@@ -187,10 +187,8 @@
                     </a>
                 </li>
             {% endif %}
-            
         </ul>
     </nav>
 </div>
 {% endif %}
-
 {% endblock %}
