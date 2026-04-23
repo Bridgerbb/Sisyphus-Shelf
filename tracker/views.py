@@ -37,8 +37,10 @@ def get_igdb_token():
     
     try:
         response = requests.post(url, params=params)
+
         print(f"DEBUG: Twitch Status: {response.status_code}")
         print(f"DEBUG: Twitch Response: {response.text}")
+        
         if response.status_code == 200:
             return response.json().get('access_token')
     except Exception as e:
