@@ -78,20 +78,26 @@
 <script>
 document.getElementById('lookup-btn').addEventListener('click', function() {
     const titleInput = document.getElementById('id_title');
-    // Django forms usually give the media_type field the ID 'id_media_type'
-    const typeSelect = document.getElementById('id_media_type');
+    
+    // This tries to find the dropdown by Django's ID, OR by the name attribute
+    const typeField = document.getElementById('id_media_type') || 
+                      document.querySelector('select[name="media_type"]');
+    
     const resultsDiv = document.getElementById('search-results');
 
     const title = titleInput.value;
-    const type = typeSelect ? typeSelect.value : '';
+    const type = typeField ? typeField.value.toLowerCase() : '';
 
-    if (!title) return alert("Type a title first!");
-    if (!type) return alert("Select a Media Type first!");
+    console.log("Searching for:", title, "Type:", type); // This helps us debug!
+
+    if (!title || !type) {
+        return alert("Please enter a title and select a Media Type (Movie/Book)!");
+    }
 
     resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
     resultsDiv.style.display = 'block';
 
-    fetch(`/api/search-metadata/?q=${encodeURIComponent(title)}&type=${type.toLowerCase()}`)
+    fetch(`/api/search-metadata/?q=${encodeURIComponent(title)}&type=${type}`)
         .then(response => response.json())
         .then(data => {
             resultsDiv.innerHTML = '';
