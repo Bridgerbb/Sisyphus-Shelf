@@ -206,17 +206,30 @@ def search_metadata(request):
 
     # BOOK SEARCH (Google Books)
     elif media_type == 'book':
-        url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            for item in response.json().get('items', [])[:5]:
-                info = item.get('volumeInfo', {})
-                results.append({
-                    'title': info.get('title'),
-                    'creator': ", ".join(info.get('authors', ['Unknown Author'])),
-                    'genre': ", ".join(info.get('categories', ['Book'])),
-                    'image': info.get('imageLinks', {}).get('thumbnail', '').replace('http://', 'https://'),
-                    'description': info.get('description', '')
-                })
+            api_key = os.getenv('GOOGLE_BOOKS_KEY')
+            url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+            
+            # Only add the key if it's NOT the placeholder and NOT empty
+            if api_key and api_key != "your_key_here":
+                url += f"&key={api_key}"
+                
+            response = requests.get(url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                for item in data.get('items', [])[:5]:
+                    info = item.get('volumeInfo', {})
+                    image_links = info.get('imageLinks', {})
+                    # Ensuring we use HTTPS for images to avoid security warnings
+                    image_url = image_links.get('thumbnail') or image_links.get('smallThumbnail') or ""
+                    image_url = image_url.replace('http://', 'https://')
+
+                    results.append({
+                        'title': info.get('title', 'Unknown Title'),
+                        'creator': ", ".join(info.get('authors', ['Unknown Author'])),
+                        'genre': ", ".join(info.get('categories', ['Book'])),
+                        'image': image_url,
+                        'description': info.get('description', '')
+                    })
 
     return JsonResponse(results, safe=False)
