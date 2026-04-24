@@ -11,3 +11,6 @@ urlpatterns = [
     path('update-queue/', views.update_queue_order, name='update_queue_order'),
     path('api/search-metadata/', views.search_metadata, name='search_metadata'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
