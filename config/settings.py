@@ -120,7 +120,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # NEW: Tell Whitenoise where to gather all the files for production
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
+STATICFILES_DIRS = [
+    BASE_DIR / "tracker" / "static",
+]
 # Auth Redirects
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
