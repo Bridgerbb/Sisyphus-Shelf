@@ -7,12 +7,16 @@
 <div class="row justify-content-center mt-4 mb-5">
     <div class="col-lg-10">
         
-        <div class="col-md-4 bg-black d-flex flex-column align-items-center justify-content-center p-3">
+        <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-4">
             {% if item.cover_image_url %}
-                <img id="current-cover-img" src="{{ item.cover_image_url }}" class="img-fluid rounded shadow-lg" alt="Cover" style="max-height: 400px;">
-                <button type="button" id="remove-cover-btn" class="btn btn-sm btn-outline-danger mt-3">🗑️ Remove Cover</button>
+                <div class="text-center w-100">
+                    <img id="current-cover-img" src="{{ item.cover_image_url }}" class="img-fluid rounded shadow-lg mb-3" alt="Cover" style="max-height: 400px; object-fit: contain;">
+                    <div>
+                        <button type="button" id="remove-cover-btn" class="btn btn-sm btn-outline-danger mt-2">🗑️ Remove Cover</button>
+                    </div>
+                </div>
             {% else %}
-                <div id="no-cover-placeholder" class="text-muted text-center py-5">
+                <div id="no-cover-placeholder" class="text-muted text-center py-5 w-100">
                     <h1 class="display-1">🖼️</h1>
                     <p>No Cover Art Found</p>
                 </div>
