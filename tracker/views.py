@@ -121,10 +121,14 @@ def pile(request):
 def add_item(request):
     if request.method == 'POST':
         form = MediaItemForm(request.POST)
+        
+        # Bypass Django's strict validation for the hidden cover image field
+        if 'cover_image_url' in form.fields:
+            form.fields['cover_image_url'].required = False
+            
         if form.is_valid():
             item = form.save(commit=False)
             item.user = request.user
-            # Note: cover_image_url will be saved here if it's in your Form/Model
             item.save()
             messages.success(request, f"'{item.title}' was added to your pile!")
             return redirect('pile') 
@@ -132,17 +136,27 @@ def add_item(request):
         form = MediaItemForm()
     return render(request, 'tracker/add_item.html', {'form': form})
 
-# ... (Detail, Delete, Register, and UpdateQueue views remain the same) ...
-
 @login_required
 def item_detail(request, pk):
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
     if request.method == 'POST':
         form = MediaItemForm(request.POST, instance=item)
+        
+        # Bypass Django's strict validation for the hidden cover image field
+        if 'cover_image_url' in form.fields:
+            form.fields['cover_image_url'].required = False
+
         if form.is_valid():
-            form.save()
+            item = form.save()
             messages.success(request, f"'{item.title}' was successfully updated!")
-            return redirect('pile') 
+            
+            # Route the user based on which Save button they clicked
+            if request.POST.get('action') == 'save_and_view':
+                return redirect('item_detail', pk=item.pk)
+            else:
+                return redirect('pile') 
+        else:
+            messages.error(request, "There was an error saving your changes.")
     else:
         form = MediaItemForm(instance=item)
     return render(request, 'tracker/item_detail.html', {'form': form, 'item': item})
