@@ -10,4 +10,5 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('update-queue/', views.update_queue_order, name='update_queue_order'),
     path('api/search-metadata/', views.search_metadata, name='search_metadata'),
+    path('random/', views.random_item, name='random_item'),
 ]

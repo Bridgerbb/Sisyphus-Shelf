@@ -17,7 +17,9 @@
                     <label class="form-label fw-bold text-dark small text-uppercase">Auto-Fill from Web</label>
                     <div class="input-group">
                         <input type="text" id="metadata-search-input" class="form-control" placeholder="Search title (e.g. 'The Matrix' or 'The Great Gatsby')">
-                        <button class="btn btn-dark" type="button" id="lookup-btn">🔍 Lookup</button>
+                        <button class="btn btn-dark" type="button" id="lookup-btn">
+                            <span id="btn-text">🔍 Lookup</span>
+                        </button>
                     </div>
                     <div id="search-results" class="list-group shadow mt-2" style="display: none; position: absolute; z-index: 1000; width: 90%; max-width: 600px;"></div>
                 </div>
@@ -82,23 +84,45 @@
 </div>
 
 <script>
-    // --- METADATA SEARCH LOGIC ---
     const lookupBtn = document.getElementById('lookup-btn');
+    const btnText = document.getElementById('btn-text');
+
     if (lookupBtn) {
         lookupBtn.addEventListener('click', function() {
-            const query = document.getElementById('metadata-search-input').value;
+            const queryInput = document.getElementById('metadata-search-input');
             const typeField = document.getElementById('id_media_type');
-            const type = typeField ? typeField.value.toLowerCase() : '';
             const resultsDiv = document.getElementById('search-results');
 
-            if (!query) return;
+            // 1. Validation
+            if (!typeField.value) {
+                typeField.setCustomValidity('Please choose a media type before searching.');
+                typeField.reportValidity();
+                return;
+            } else { typeField.setCustomValidity(''); }
 
-            resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
+            if (!queryInput.value.trim()) {
+                queryInput.setCustomValidity('Please enter a title to search.');
+                queryInput.reportValidity();
+                return;
+            } else { queryInput.setCustomValidity(''); }
+
+            // 2. Start Loading State (The Demo Polish)
+            lookupBtn.disabled = true;
+            btnText.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...';
+
+            const query = queryInput.value;
+            const type = typeField.value.toLowerCase();
+
+            resultsDiv.innerHTML = '<div class="list-group-item">Looking for ' + query + '...</div>';
             resultsDiv.style.display = 'block';
 
             fetch(`/api/search-metadata/?q=${encodeURIComponent(query)}&type=${type}`)
                 .then(response => response.json())
                 .then(data => {
+                    // 3. Reset Button State
+                    lookupBtn.disabled = false;
+                    btnText.innerHTML = '🔍 Lookup';
+
                     resultsDiv.innerHTML = '';
                     if (data.length === 0) {
                         resultsDiv.innerHTML = '<div class="list-group-item">No results found</div>';
@@ -118,10 +142,14 @@
                             document.getElementById('id_creator').value = item.creator;
                             document.getElementById('id_genre').value = item.genre;
                             resultsDiv.style.display = 'none';
-                            alert("Metadata pulled! Check the form below.");
                         };
                         resultsDiv.appendChild(btn);
                     });
+                })
+                .catch(error => {
+                    lookupBtn.disabled = false;
+                    btnText.innerHTML = '🔍 Lookup';
+                    console.error('Error:', error);
                 });
         });
 
@@ -133,7 +161,7 @@
         });
     }
 
-    // Logic to lock the Priority switch if item is finished
+    // Lock Priority switch if item is finished
     const statusSelect = document.getElementById('id_status');
     const prioritySwitch = document.getElementById('id_priority_flag');
 
@@ -141,9 +169,7 @@
         if (statusSelect.value === 'Finished') {
             prioritySwitch.checked = false;
             prioritySwitch.disabled = true;
-        } else {
-            prioritySwitch.disabled = false;
-        }
+        } else { prioritySwitch.disabled = false; }
     }
 
     if (statusSelect && prioritySwitch) {

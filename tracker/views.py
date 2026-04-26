@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 import os
 import requests
+import random  # Added for the "I'm Feeling Lucky" feature
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,7 +21,6 @@ load_dotenv()
 def get_igdb_token():
     """
     Automatically fetches a fresh OAuth token from Twitch.
-    This is the 'Self-Healing' part so your game search never breaks.
     """
     client_id = os.getenv('TWITCH_CLIENT_ID')
     client_secret = os.getenv('TWITCH_CLIENT_SECRET')
@@ -37,33 +37,56 @@ def get_igdb_token():
     
     try:
         response = requests.post(url, params=params)
-
-        print(f"DEBUG: Twitch Status: {response.status_code}")
-        print(f"DEBUG: Twitch Response: {response.text}")
-        
         if response.status_code == 200:
             return response.json().get('access_token')
     except Exception as e:
         print(f"Twitch Token Error: {e}")
     return None
 
-# --- EXISTING VIEWS ---
+# --- ENHANCED VIEWS ---
 
 @login_required
 def dashboard(request):
-    total_backlog = MediaItem.objects.filter(user=request.user, status='Backlog').count()
-    in_progress = MediaItem.objects.filter(user=request.user, status='In-Progress').count()
-    finished = MediaItem.objects.filter(user=request.user, status='Finished').count()
+    """
+    Dashboard with 'Shelf Weight' statistics for the demo.
+    """
+    items = MediaItem.objects.filter(user=request.user)
     
-    priority_items = MediaItem.objects.filter(user=request.user, priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
+    # Enhanced Statistics
+    stats = {
+        'total': items.count(),
+        'backlog': items.filter(status='Backlog').count(),
+        'in_progress': items.filter(status='In-Progress').count(),
+        'finished': items.filter(status='Finished').count(),
+        # Specific breakdown for 'Currently Doing'
+        'reading': items.filter(media_type='Book', status='In-Progress').count(),
+        'playing': items.filter(media_type='Game', status='In-Progress').count(),
+        'watching': items.filter(media_type='Movie', status='In-Progress').count(),
+    }
+    
+    priority_items = items.filter(priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
     
     context = {
-        'total_backlog': total_backlog,
-        'in_progress': in_progress,
-        'finished': finished,
+        'stats': stats,
         'priority_items': priority_items,
     }
     return render(request, 'tracker/dashboard.html', context)
+
+@login_required
+def random_item(request):
+    """
+    'I'm Feeling Lucky' - Picks a random unfinished item.
+    Great 'Demo Closer' feature.
+    """
+    backlog = MediaItem.objects.filter(user=request.user).exclude(status='Finished')
+    
+    if backlog.exists():
+        selected = random.choice(list(backlog))
+        messages.info(request, f"🎲 Sisyphus chose for you: {selected.title}")
+        return redirect('item_detail', pk=selected.pk)
+    
+    messages.warning(request, "The hill is empty! Add something to the pile first.")
+    return redirect('pile')
 
 @login_required
 def pile(request):
@@ -121,8 +144,6 @@ def pile(request):
 def add_item(request):
     if request.method == 'POST':
         form = MediaItemForm(request.POST)
-        
-        # Bypass Django's strict validation for the hidden cover image field
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
             
@@ -141,8 +162,6 @@ def item_detail(request, pk):
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
     if request.method == 'POST':
         form = MediaItemForm(request.POST, instance=item)
-        
-        # Bypass Django's strict validation for the hidden cover image field
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
 
@@ -150,7 +169,6 @@ def item_detail(request, pk):
             item = form.save()
             messages.success(request, f"'{item.title}' was successfully updated!")
             
-            # Route the user based on which Save button they clicked
             if request.POST.get('action') == 'save_and_view':
                 return redirect('item_detail', pk=item.pk)
             else:
@@ -191,8 +209,6 @@ def update_queue_order(request):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
         return JsonResponse({'status': 'success'})
 
-# --- UPDATED SEARCH METADATA (The Triple Crown) ---
-
 def search_metadata(request):
     query = request.GET.get('q')
     media_type = request.GET.get('type', '').lower()
@@ -230,7 +246,6 @@ def search_metadata(request):
             for item in data.get('items', [])[:5]:
                 info = item.get('volumeInfo', {})
                 image_links = info.get('imageLinks', {})
-                # Use 'thumbnail' and force HTTPS
                 image_url = image_links.get('thumbnail') or image_links.get('smallThumbnail') or ""
                 image_url = image_url.replace('http://', 'https://')
                 
@@ -252,7 +267,6 @@ def search_metadata(request):
                 'Client-ID': client_id,
                 'Authorization': f'Bearer {token}',
             }
-            # IGDB uses a custom query body
             body = f'search "{query}"; fields name, cover.url, genres.name, summary; limit 5;'
             url = "https://api.igdb.com/v4/games"
             
@@ -260,8 +274,6 @@ def search_metadata(request):
             if response.status_code == 200:
                 for item in response.json():
                     cover_data = item.get('cover', {})
-                    # IGDB images are // protocol relative and 't_thumb' by default. 
-                    # We swap to 't_cover_big' for high quality.
                     img_url = cover_data.get('url', '').replace('t_thumb', 't_cover_big')
                     if img_url:
                         img_url = "https:" + img_url

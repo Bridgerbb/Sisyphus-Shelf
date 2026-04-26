@@ -8,35 +8,44 @@
 <div class="row mb-4 mt-2">
     <div class="col-12">
         <h1 class="display-5 fw-bold">Welcome back, Sisyphus.</h1>
-        <p class="lead text-muted">Your boulder isn't going to roll itself. Here is your current backlog.</p>
+        <p class="lead text-muted">Your boulder isn't going to roll itself. Here is your current shelf weight.</p>
     </div>
 </div>
 
 <div class="row mb-5">
-    <div class="col-md-4 mb-3">
-        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #045C63;">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #343a40;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">The Pile</h6>
-                <h2 class="display-4 fw-bold">{{ total_backlog }}</h2>
-                <p class="card-text mb-0">Total items gathering dust.</p>
+                <h6 class="card-title text-uppercase fw-bold opacity-75">The Total</h6>
+                <h2 class="display-4 fw-bold">{{ stats.total }}</h2>
+                <p class="card-text mb-0 small">Items in the collection.</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 col-sm-6 mb-3">
         <div class="card text-white h-100 shadow-sm border-0" style="background-color: #610536;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">Currently Playing/Reading</h6>
-                <h2 class="display-4 fw-bold">{{ in_progress }}</h2>
-                <p class="card-text mb-0">Items in progress.</p>
+                <h6 class="card-title text-uppercase fw-bold opacity-75">In-Progress</h6>
+                <h2 class="display-4 fw-bold">{{ stats.in_progress }}</h2>
+                <p class="card-text mb-0 small">Active conquests.</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #045C63;">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase fw-bold opacity-75">Backlog</h6>
+                <h2 class="display-4 fw-bold">{{ stats.backlog }}</h2>
+                <p class="card-text mb-0 small">Awaiting the climb.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
         <div class="card text-white h-100 shadow-sm border-0" style="background-color: #0B7007;">
             <div class="card-body">
                 <h6 class="card-title text-uppercase fw-bold opacity-75">Finished</h6>
-                <h2 class="display-4 fw-bold">{{ finished }}</h2>
-                <p class="card-text mb-0">Victories against Tsundoku.</p>
+                <h2 class="display-4 fw-bold">{{ stats.finished }}</h2>
+                <p class="card-text mb-0 small">Victories achieved.</p>
             </div>
         </div>
     </div>
@@ -45,9 +54,9 @@
 <div class="row">
     <div class="col-lg-7 mb-4">
         <div class="card bg-dark text-white shadow border-secondary h-100">
-            <div class="card-header border-secondary fw-bold fs-5 p-3">
-                🔥 Next Up Queue
-                <span class="fs-6 fw-normal text-muted float-end mt-1">Drag and drop to reorder</span>
+            <div class="card-header border-secondary fw-bold fs-5 p-3 d-flex justify-content-between align-items-center">
+                <span>🔥 Next Up Queue</span>
+                <a href="{% url 'random_item' %}" class="btn btn-outline-info btn-sm">🎲 Lucky Pick</a>
             </div>
             
             {% csrf_token %}
@@ -56,46 +65,36 @@
                 {% for item in priority_items %}
                     <li class="list-group-item bg-dark text-white border-secondary p-3 transition-all" data-id="{{ item.id }}" style="cursor: grab;">
                         <div class="d-flex justify-content-between align-items-center gap-3">
-                            
                             <div class="fw-bold fs-5 text-break">
                                 {{ item.title }}
                                 {% if item.rating %}
-                                    <span class="text-warning fs-6 ms-2 fw-normal text-nowrap">⭐ {{ item.rating }}/10</span>
+                                    <span class="text-warning fs-6 ms-2 fw-normal text-nowrap">⭐ {{ item.rating }}</span>
                                 {% endif %}
                             </div>
                             
                             <div class="flex-shrink-0 text-end">
-                                {% if item.status == 'Backlog' %}
-                                    <span class="badge fs-6 me-1 mb-1" style="background-color: #045C63;">Backlog</span>
-                                {% elif item.status == 'In-Progress' %}
-                                    <span class="badge fs-6 me-1 mb-1" style="background-color: #610536;">In-Progress</span>
-                                {% endif %}
-                                
                                 <span class="badge bg-dark border border-secondary fs-6 mb-1">
                                     {% if item.media_type == 'Book' %}📚
                                     {% elif item.media_type == 'Movie' %}🎬
                                     {% elif item.media_type == 'Game' %}🎮
                                     {% else %}📦{% endif %}
-                                    {{ item.get_media_type_display }}
+                                    {{ item.media_type }}
                                 </span>
+                                <a href="{% url 'item_detail' item.pk %}" class="ms-2 text-info" style="text-decoration: none;">✎</a>
                             </div>
                         </div>
                     </li>
                 {% empty %}
                     <li class="list-group-item bg-dark text-white text-muted p-4 text-center border-secondary">
-                        Your queue is empty! Go to The Pile to mark some items as 🔥 High Priority.
+                        The hill is empty! Go to The Pile to mark some items as 🔥 High Priority.
                     </li>
                 {% endfor %}
             </ul>
-            
-            <div class="card-footer bg-transparent text-center py-3 border-top-0 mt-auto">
-                <a href="{% url 'pile' %}" class="btn btn-outline-light btn-sm px-4">View The Full Pile</a>
-            </div>
         </div>
     </div>
 
     <div class="col-lg-5 mb-4">
-        <h4 class="fw-bold mb-3">📊 Backlog Breakdown</h4>
+        <h4 class="fw-bold mb-3 text-center">📊 Backlog Breakdown</h4>
         <div class="card bg-dark shadow-sm border-secondary h-100 d-flex justify-content-center align-items-center p-4">
             <canvas id="backlogChart"></canvas>
         </div>
@@ -114,14 +113,14 @@
             labels: ['Backlog', 'In-Progress', 'Finished'],
             datasets: [{
                 data: [
-                    {{ total_backlog|default:0 }},
-                    {{ in_progress|default:0 }},
-                    {{ finished|default:0 }}
+                    {{ stats.backlog }},
+                    {{ stats.in_progress }},
+                    {{ stats.finished }}
                 ],
                 backgroundColor: [
-                    '#045C63', // Backlog (Blue)
-                    '#610536', // In-Progress (Violet)
-                    '#0B7007'  // Finished (Green)
+                    '#045C63', // Backlog
+                    '#610536', // In-Progress
+                    '#0B7007'  // Finished
                 ],
                 borderColor: '#212529', 
                 borderWidth: 3,
@@ -133,13 +132,7 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        color: '#ffffff', // Ensures the text pieces are bright white and readable
-                        padding: 20,
-                        font: {
-                            size: 14
-                        }
-                    }
+                    labels: { color: '#ffffff', padding: 20, font: { size: 14 } }
                 }
             }
         }
@@ -151,14 +144,10 @@
 
     if (queue) {
         Sortable.create(queue, {
-            animation: 150, // Smooth sliding animation
-            ghostClass: 'opacity-50', // Dims the card while you are holding it
-            
-            // When an item is dropped, fire this function!
+            animation: 150,
+            ghostClass: 'opacity-50',
             onEnd: function (evt) {
                 const orderedIds = Array.from(queue.children).map(li => li.getAttribute('data-id'));
-
-                // Send the new order silently to Django
                 fetch("{% url 'update_queue_order' %}", {
                     method: 'POST',
                     headers: {
@@ -169,15 +158,14 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // VISUAL FEEDBACK: Briefly flash the border green to prove it saved instantly!
+                    // Flash success
                     evt.item.classList.remove('border-secondary');
                     evt.item.classList.add('border-success', 'border-2');
                     setTimeout(() => {
                         evt.item.classList.remove('border-success', 'border-2');
                         evt.item.classList.add('border-secondary');
                     }, 800);
-                })
-                .catch(error => console.error('Error:', error));
+                });
             }
         });
     }
