@@ -8,44 +8,44 @@
 <div class="row mb-4 mt-2">
     <div class="col-12">
         <h1 class="display-5 fw-bold">Welcome back, Sisyphus.</h1>
-        <p class="lead text-muted">Your boulder isn't going to roll itself. Here is your current shelf weight.</p>
+        <p class="lead opacity-75">Your boulder isn't going to roll itself. Here is your current shelf weight.</p>
     </div>
 </div>
 
 <div class="row mb-5">
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #343a40;">
+        <div class="card h-100 shadow-sm border-0" style="background-color: rgba(52, 58, 64, 0.9) !important;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">The Total</h6>
+                <h6 class="card-title text-uppercase fw-bold opacity-75 small">The Total</h6>
                 <h2 class="display-4 fw-bold">{{ stats.total }}</h2>
-                <p class="card-text mb-0 small">Items in the collection.</p>
+                <p class="card-text mb-0 small opacity-75">Items in the collection.</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #610536;">
+        <div class="card h-100 shadow-sm border-0" style="background-color: rgba(97, 5, 54, 0.9) !important;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">In-Progress</h6>
+                <h6 class="card-title text-uppercase fw-bold opacity-75 small">In-Progress</h6>
                 <h2 class="display-4 fw-bold">{{ stats.in_progress }}</h2>
-                <p class="card-text mb-0 small">Active conquests.</p>
+                <p class="card-text mb-0 small opacity-75">Active conquests.</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #045C63;">
+        <div class="card h-100 shadow-sm border-0" style="background-color: rgba(4, 92, 99, 0.9) !important;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">Backlog</h6>
+                <h6 class="card-title text-uppercase fw-bold opacity-75 small">Backlog</h6>
                 <h2 class="display-4 fw-bold">{{ stats.backlog }}</h2>
-                <p class="card-text mb-0 small">Awaiting the climb.</p>
+                <p class="card-text mb-0 small opacity-75">Awaiting the climb.</p>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-white h-100 shadow-sm border-0" style="background-color: #0B7007;">
+        <div class="card h-100 shadow-sm border-0" style="background-color: rgba(11, 112, 7, 0.9) !important;">
             <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold opacity-75">Finished</h6>
+                <h6 class="card-title text-uppercase fw-bold opacity-75 small">Finished</h6>
                 <h2 class="display-4 fw-bold">{{ stats.finished }}</h2>
-                <p class="card-text mb-0 small">Victories achieved.</p>
+                <p class="card-text mb-0 small opacity-75">Victories achieved.</p>
             </div>
         </div>
     </div>
@@ -53,8 +53,8 @@
 
 <div class="row">
     <div class="col-lg-7 mb-4">
-        <div class="card bg-dark text-white shadow border-secondary h-100">
-            <div class="card-header border-secondary fw-bold fs-5 p-3 d-flex justify-content-between align-items-center">
+        <div class="card shadow border-secondary h-100">
+            <div class="card-header border-secondary fw-bold fs-5 p-3 d-flex justify-content-between align-items-center bg-transparent">
                 <span>🔥 Next Up Queue</span>
                 <a href="{% url 'random_item' %}" class="btn btn-outline-info btn-sm">🎲 Lucky Pick</a>
             </div>
@@ -63,7 +63,7 @@
             
             <ul class="list-group list-group-flush" id="sortable-queue">
                 {% for item in priority_items %}
-                    <li class="list-group-item bg-dark text-white border-secondary p-3 transition-all" data-id="{{ item.id }}" style="cursor: grab;">
+                    <li class="list-group-item bg-transparent border-secondary p-3 transition-all" data-id="{{ item.id }}" style="cursor: grab;">
                         <div class="d-flex justify-content-between align-items-center gap-3">
                             <div class="fw-bold fs-5 text-break">
                                 {{ item.title }}
@@ -74,18 +74,17 @@
                             
                             <div class="flex-shrink-0 text-end">
                                 <span class="badge bg-dark border border-secondary fs-6 mb-1">
-                                    {% if item.media_type == 'Book' %}📚
-                                    {% elif item.media_type == 'Movie' %}🎬
-                                    {% elif item.media_type == 'Game' %}🎮
-                                    {% else %}📦{% endif %}
-                                    {{ item.media_type }}
+                                    {% if item.media_type == 'Book' %}📚 Book
+                                    {% elif item.media_type == 'Movie' %}🎬 Movie/TV
+                                    {% elif item.media_type == 'Game' %}🎮 Game
+                                    {% else %}📦 {{ item.media_type }}{% endif %}
                                 </span>
                                 <a href="{% url 'item_detail' item.pk %}" class="ms-2 text-info" style="text-decoration: none;">✎</a>
                             </div>
                         </div>
                     </li>
                 {% empty %}
-                    <li class="list-group-item bg-dark text-white text-muted p-4 text-center border-secondary">
+                    <li class="list-group-item bg-transparent text-muted p-4 text-center border-secondary">
                         The hill is empty! Go to The Pile to mark some items as 🔥 High Priority.
                     </li>
                 {% endfor %}
@@ -95,7 +94,7 @@
 
     <div class="col-lg-5 mb-4">
         <h4 class="fw-bold mb-3 text-center">📊 Backlog Breakdown</h4>
-        <div class="card bg-dark shadow-sm border-secondary h-100 d-flex justify-content-center align-items-center p-4">
+        <div class="card shadow-sm border-secondary h-100 d-flex justify-content-center align-items-center p-4">
             <canvas id="backlogChart"></canvas>
         </div>
     </div>
@@ -158,12 +157,10 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Flash success
-                    evt.item.classList.remove('border-secondary');
+                    // Flash success effect
                     evt.item.classList.add('border-success', 'border-2');
                     setTimeout(() => {
                         evt.item.classList.remove('border-success', 'border-2');
-                        evt.item.classList.add('border-secondary');
                     }, 800);
                 });
             }

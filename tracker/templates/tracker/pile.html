@@ -5,6 +5,7 @@
 
 {% block content %}
 <style>
+    /* Specific thumbnail styling */
     .pile-thumbnail {
         width: 50px;
         height: 75px;
@@ -15,9 +16,11 @@
         transform: scale(1.1);
         z-index: 10;
     }
-    .table-dark-custom {
-        background-color: rgba(0,0,0,0.4);
-        backdrop-filter: blur(0.5px);
+    
+    /* Clean up the table spacing */
+    .table-responsive {
+        border-radius: 15px;
+        overflow: hidden;
     }
 </style>
 
@@ -25,7 +28,7 @@
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
             <h1 class="display-5 fw-bold">The Pile</h1>
-            <p class="lead text-muted">Your unified archive of everything waiting to be consumed.</p>
+            <p class="lead opacity-75">Your unified archive of everything waiting to be consumed.</p>
         </div>
         <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg">+ Add New Item</a>
     </div>
@@ -37,10 +40,10 @@
             {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
             
-            <input type="text" name="q" class="form-control form-control-lg bg-dark text-white border-secondary rounded-pill ps-4" 
+            <input type="text" name="q" class="form-control form-control-lg rounded-pill ps-4" 
                    placeholder="Search by title, creator, or genre..." value="{{ search_query|default_if_none:'' }}">
             
-            <select name="sort" class="form-select form-select-lg bg-dark text-white border-secondary rounded-pill" style="max-width: 220px;" onchange="this.form.submit()">
+            <select name="sort" class="form-select form-select-lg rounded-pill" style="max-width: 220px;" onchange="this.form.submit()">
                 <option value="">Sort by Default</option>
                 <option value="highest" {% if current_sort == 'highest' %}selected{% endif %}>⭐ Highest Rated</option>
                 <option value="lowest" {% if current_sort == 'lowest' %}selected{% endif %}>⭐ Lowest Rated</option>
@@ -53,31 +56,34 @@
 
 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
     <a href="{% url 'pile' %}{% if current_sort %}?sort={{ current_sort }}{% endif %}" 
-       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
+       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">
         🌐 All
     </a>
     
-    <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
+    <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" 
+       class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
     
     <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_type == 'Movie' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
-       🎬 Movies/TV
-    </a>
+       class="btn rounded-pill px-4 {% if current_type == 'Movie' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies/TV</a>
     
-    <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
+    <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" 
+       class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
     
     <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
 
-    <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 {% if current_status == 'Unfinished' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">⏳ Unfinished</a>
-    <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-4 {% if current_status == 'Finished' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
+    <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" 
+       class="btn rounded-pill px-4 {% if current_status == 'Unfinished' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">⏳ Unfinished</a>
+    
+    <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" 
+       class="btn rounded-pill px-4 {% if current_status == 'Finished' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
 </div>
 
-<div class="card shadow-sm border-0 table-dark-custom">
+<div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-white">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
-                    <tr class="text-muted small text-uppercase">
+                    <tr class="text-white small text-uppercase" style="background-color: rgba(255,255,255,0.05);">
                         <th scope="col" class="ps-4" style="width: 80px;">Cover</th>
                         <th scope="col">Title</th>
                         <th scope="col">Creator</th>
@@ -106,7 +112,7 @@
                                 {{ item.title }}
                             </a>
                             {% if item.priority_flag %}
-                                <span class="badge bg-black border border-danger text-danger">🔥 Next Up</span>
+                                <span class="badge bg-black border border-danger text-danger ms-1">🔥 Next Up</span>
                             {% endif %}
                             {% if item.rating %}
                                 <div class="text-warning small mt-1">⭐ {{ item.rating }}/10</div>
@@ -116,17 +122,16 @@
                         <td>
                             {{ item.creator }}
                             {% if item.genre %}
-                                <br><small class="text-muted fst-italic">{{ item.genre }}</small>
+                                <br><small class="opacity-50 fst-italic">{{ item.genre }}</small>
                             {% endif %}
                         </td>
                         
                         <td>
                             <span class="badge bg-dark border border-secondary">
-                                {% if item.media_type == 'Book' %}📚
-                                {% elif item.media_type == 'Movie' %}🎬
-                                {% elif item.media_type == 'Game' %}🎮
-                                {% else %}📦{% endif %}
-                                {{ item.get_media_type_display }}
+                                {% if item.media_type == 'Book' %}📚 Book
+                                {% elif item.media_type == 'Movie' %}🎬 Movie/TV
+                                {% elif item.media_type == 'Game' %}🎮 Game
+                                {% else %}📦 {{ item.get_media_type_display }}{% endif %}
                             </span>
                         </td>
                         
@@ -150,9 +155,9 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <h5>No items match your filters.</h5>
-                            <a href="{% url 'pile' %}" class="btn btn-outline-light mt-2">Clear All Filters</a>
+                        <td colspan="6" class="text-center py-5">
+                            <h5 class="opacity-50">No items match your filters.</h5>
+                            <a href="{% url 'pile' %}" class="btn btn-outline-light btn-sm mt-2">Clear All Filters</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -165,22 +170,22 @@
 {% if items.has_other_pages %}
 <div class="d-flex justify-content-center mt-4 mb-5">
     <nav aria-label="Pile Pagination">
-        <ul class="pagination shadow-sm" data-bs-theme="dark">
+        <ul class="pagination shadow-sm">
             {% if items.has_previous %}
                 <li class="page-item">
-                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                    <a class="page-link btn-outline-light border-secondary text-white bg-dark" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
                         &laquo; Previous
                     </a>
                 </li>
             {% endif %}
             <li class="page-item disabled">
-                <span class="page-link bg-secondary text-white border-secondary fw-bold">
+                <span class="page-link border-secondary text-white bg-secondary fw-bold">
                     Page {{ items.number }} of {{ items.paginator.num_pages }}
                 </span>
             </li>
             {% if items.has_next %}
                 <li class="page-item">
-                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                    <a class="page-link btn-outline-light border-secondary text-white bg-dark" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
                         Next &raquo;
                     </a>
                 </li>

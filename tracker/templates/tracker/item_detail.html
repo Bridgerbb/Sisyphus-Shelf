@@ -4,33 +4,68 @@
 {% block bg_image %}{% static 'tracker/Continuous.gif' %}{% endblock %}
 
 {% block content %}
+<style>
+    /* High-Transparency Card (No Blur) */
+    .glass-card {
+        background-color: rgba(15, 15, 15, 0.9) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    /* Labels and Headings */
+    label, h1, h4, .h4, .form-check-label {
+        color: #ffffff !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* Form Inputs */
+    .form-control, .form-select {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* Metadata Box Styling */
+    .metadata-update-box {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
 <div class="row justify-content-center mt-4 mb-5">
     <div class="col-lg-10">
         
-        <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-4">
-            {% if item.cover_image_url %}
-                <div class="text-center w-100">
-                    <<img id="current-cover-img" 
-                    src="{{ item.cover_image_url }}" 
-                    class="img-fluid w-100 rounded shadow-lg mb-3" 
-                    alt="Cover" 
-                    style="max-height: 450px; object-fit: contain; width: 100%;">
-                    <div>
-                        <button type="button" id="remove-cover-btn" class="btn btn-sm btn-outline-danger mt-2">🗑️ Remove Cover</button>
-                    </div>
+        <div class="card glass-card mb-4">
+            <div class="row g-0">
+                <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-4" style="background-color: rgba(0,0,0,0.5) !important;">
+                    {% if item.cover_image_url %}
+                        <div class="text-center w-100">
+                            <img id="current-cover-img" 
+                                 src="{{ item.cover_image_url }}" 
+                                 class="img-fluid rounded shadow-lg mb-3" 
+                                 alt="Cover" 
+                                 style="max-height: 400px; object-fit: contain;">
+                            <div>
+                                <button type="button" id="remove-cover-btn" class="btn btn-sm btn-outline-danger mt-2">🗑️ Remove Cover</button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div id="no-cover-placeholder" class="text-center py-5 w-100 opacity-50">
+                            <h1 class="display-1">🖼️</h1>
+                            <p>No Cover Art Found</p>
+                        </div>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div id="no-cover-placeholder" class="text-muted text-center py-5 w-100">
-                    <h1 class="display-1">🖼️</h1>
-                    <p>No Cover Art Found</p>
-                </div>
-            {% endif %}
-        </div>
 
                 <div class="col-md-8 d-flex align-items-center">
                     <div class="card-body p-4 p-md-5">
                         <h1 class="display-4 fw-bold mb-1">{{ item.title }}</h1>
-                        <h4 class="text-muted mb-4">{{ item.creator }}</h4>
+                        <h4 class="opacity-75 mb-4">{{ item.creator }}</h4>
                         
                         <div class="d-flex flex-wrap gap-2">
                             <span class="badge bg-dark border border-secondary fs-6 py-2 px-3">
@@ -53,15 +88,15 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card glass-card">
             <div class="card-body p-4 p-md-5">
-                <h4 class="fw-bold border-bottom pb-3 mb-4 text-dark">Edit Item Details</h4>
+                <h4 class="fw-bold border-bottom border-secondary pb-3 mb-4">Edit Item Details</h4>
                 
-                <div class="p-3 rounded mb-4 border" style="background-color: rgba(0,0,0,0.05);">
-                    <label class="form-label fw-bold text-dark small text-uppercase">Auto-Update from Web</label>
+                <div class="p-3 rounded mb-4 metadata-update-box">
+                    <label class="form-label fw-bold small text-uppercase opacity-75">Auto-Update from Web</label>
                     <div class="input-group">
                         <input type="text" id="metadata-search-input" class="form-control" placeholder="Search for better cover/info...">
-                        <button class="btn btn-dark" type="button" id="lookup-btn">🔍 Lookup</button>
+                        <button class="btn btn-outline-light" type="button" id="lookup-btn">🔍 Lookup</button>
                     </div>
                     <div id="search-results" class="list-group shadow mt-2" style="display: none; position: absolute; z-index: 1000; width: 80%; max-width: 600px;"></div>
                 </div>
@@ -71,7 +106,7 @@
                     
                     <input type="hidden" name="cover_image_url" id="id_cover_image_url" value="{{ item.cover_image_url }}">
 
-                    <div class="row g-3 text-dark">
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Title</label>
                             {{ form.title }}
@@ -109,18 +144,18 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label class="form-label fw-bold mt-3">📝 Personal Notes</label>
+                            <label class="form-label fw-bold mt-3 opacity-75">📝 Personal Notes</label>
                             {{ form.notes }}
                         </div>
 
-                        <div class="col-12 mt-4 d-flex justify-content-between border-top pt-4">
+                        <div class="col-12 mt-4 d-flex justify-content-between border-top border-secondary pt-4">
                             <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 Delete Item
                             </button>
                             
                             <div>
-                                <a href="{% url 'pile' %}" class="btn btn-light px-4 border">Cancel</a>
-                                <button type="submit" name="action" value="save_and_view" class="btn btn-info px-4 shadow">Save & Keep Editing</button>
+                                <a href="{% url 'pile' %}" class="btn btn-outline-secondary px-4 text-white">Cancel</a>
+                                <button type="submit" name="action" value="save_and_view" class="btn btn-info px-4 shadow text-white">Save & Keep Editing</button>
                                 <button type="submit" name="action" value="save" class="btn btn-primary px-5 shadow">Save & Exit</button>
                             </div>
                         </div>
@@ -134,7 +169,7 @@
 
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title text-danger fw-bold">⚠️ Confirm Deletion</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -161,12 +196,12 @@
         lookupBtn.addEventListener('click', function() {
             const query = document.getElementById('metadata-search-input').value;
             const typeField = document.getElementById('id_media_type');
-            const type = typeField ? typeField.value.toLowerCase() : '';
+            const type = typeField ? typeField.value.toLowerCase().replace('/', '').replace(' ', '') : '';
             const resultsDiv = document.getElementById('search-results');
 
             if (!query) return;
 
-            resultsDiv.innerHTML = '<div class="list-group-item">Searching...</div>';
+            resultsDiv.innerHTML = '<div class="list-group-item bg-dark text-white">Searching...</div>';
             resultsDiv.style.display = 'block';
 
             fetch(`/api/search-metadata/?q=${encodeURIComponent(query)}&type=${type}`)
@@ -174,40 +209,35 @@
                 .then(data => {
                     resultsDiv.innerHTML = '';
                     if (data.length === 0) {
-                        resultsDiv.innerHTML = '<div class="list-group-item">No results found</div>';
+                        resultsDiv.innerHTML = '<div class="list-group-item bg-dark text-white">No results found</div>';
                         return;
                     }
                     data.forEach(item => {
                         const btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
+                        btn.className = 'list-group-item list-group-item-action bg-dark text-white d-flex align-items-center gap-3 border-secondary';
                         btn.innerHTML = `
                             <img src="${item.image}" style="width: 40px;" class="rounded shadow-sm">
                             <div><div class="fw-bold">${item.title}</div><small class="text-muted">${item.creator}</small></div>
                         `;
                         btn.onclick = () => {
-                            // ALWAYS update the cover image
                             document.getElementById('id_cover_image_url').value = item.image;
-
-                            // Grab the other fields
                             const titleField = document.getElementById('id_title');
                             const creatorField = document.getElementById('id_creator');
                             const genreField = document.getElementById('id_genre');
 
-                            // ONLY update them if they are currently completely empty
                             if (titleField && titleField.value.trim() === '') titleField.value = item.title;
                             if (creatorField && creatorField.value.trim() === '') creatorField.value = item.creator;
                             if (genreField && genreField.value.trim() === '') genreField.value = item.genre;
                             
                             resultsDiv.style.display = 'none';
-                            alert("Cover art updated! (Any blank fields were also filled). Click 'Save & Keep Editing' or 'Save & Exit' to finalize.");
+                            alert("Cover art updated! Click 'Save' to finalize.");
                         };
                         resultsDiv.appendChild(btn);
                     });
                 });
         });
 
-        // Close results if you click away
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#metadata-search-input') && !e.target.closest('#lookup-btn') && !e.target.closest('#search-results')) {
                 const resultsDiv = document.getElementById('search-results');
@@ -216,15 +246,15 @@
         });
     }
 
-    // Logic to lock the Priority switch if item is finished
+    // Lock Priority switch logic
     const statusSelect = document.getElementById('id_status');
     const prioritySwitch = document.getElementById('id_priority_flag');
 
     function togglePrioritySwitch() {
-        if (statusSelect.value === 'Finished') {
+        if (statusSelect && statusSelect.value === 'Finished') {
             prioritySwitch.checked = false;
             prioritySwitch.disabled = true;
-        } else {
+        } else if (prioritySwitch) {
             prioritySwitch.disabled = false;
         }
     }
@@ -234,21 +264,15 @@
         statusSelect.addEventListener('change', togglePrioritySwitch);
     }
 
-        // --- REMOVE COVER LOGIC ---
+    // --- REMOVE COVER LOGIC ---
     const removeCoverBtn = document.getElementById('remove-cover-btn');
     if (removeCoverBtn) {
         removeCoverBtn.addEventListener('click', function() {
-            // Clear the hidden input field
             document.getElementById('id_cover_image_url').value = '';
-            
-            // Hide the image visually so the user knows it worked
             const img = document.getElementById('current-cover-img');
             if (img) img.style.display = 'none';
-            
-            // Hide the button itself
             this.style.display = 'none';
-            
-            alert("Cover marked for removal! Click 'Save & Keep Editing' or 'Save & Exit' to finalize.");
+            alert("Cover marked for removal! Click 'Save' to finalize.");
         });
     }
 </script>
