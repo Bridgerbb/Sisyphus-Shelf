@@ -78,86 +78,55 @@
        class="btn rounded-pill px-4 {% if current_status == 'Finished' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
 </div>
 
-<div class="card shadow-sm border-0">
+<div class="card shadow-sm border-0 w-100" style="overflow-x: hidden;">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" style="min-width: 600px;"> 
                 <thead>
                     <tr class="text-white small text-uppercase" style="background-color: rgba(255,255,255,0.05);">
-                        <th scope="col" class="ps-4" style="width: 80px;">Cover</th>
+                        <th scope="col" class="ps-3" style="width: 60px;">Cover</th>
                         <th scope="col">Title</th>
-                        <th scope="col">Creator</th>
-                        <th scope="col">Type</th>
+                        <th scope="col" class="d-none d-sm-table-cell">Creator</th>
                         <th scope="col">Status</th>
-                        <th scope="col" class="text-end pe-4">Actions</th>
+                        <th scope="col" class="text-end pe-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td class="ps-4">
-                            <a href="{% url 'item_detail' item.id %}">
-                                {% if item.cover_image_url %}
-                                    <img src="{{ item.cover_image_url }}" class="pile-thumbnail rounded shadow-sm" alt="cover">
-                                {% else %}
-                                    <div class="pile-thumbnail rounded bg-secondary d-flex align-items-center justify-content-center text-white-50 small">
-                                        No Image
-                                    </div>
-                                {% endif %}
-                            </a>
+                        <td class="ps-3">
+                            {% if item.cover_image_url %}
+                                <img src="{{ item.cover_image_url }}" class="pile-thumbnail rounded" alt="cover" style="width: 40px; height: 60px;">
+                            {% else %}
+                                <div class="pile-thumbnail rounded bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 60px; font-size: 10px;">NA</div>
+                            {% endif %}
                         </td>
 
-                        <td class="fw-bold text-break" style="max-width: 250px;">
-                            <a href="{% url 'item_detail' item.id %}" class="text-decoration-none text-white">
+                        <td class="fw-bold">
+                            <div class="text-truncate" style="max-width: 150px;">
                                 {{ item.title }}
-                            </a>
-                            {% if item.priority_flag %}
-                                <span class="badge bg-black border border-danger text-danger ms-1">🔥 Next Up</span>
-                            {% endif %}
-                            {% if item.rating %}
-                                <div class="text-warning small mt-1">⭐ {{ item.rating }}/10</div>
-                            {% endif %}
+                            </div>
+                            <div class="d-sm-none small opacity-50">{{ item.creator }}</div>
                         </td>
 
-                        <td>
-                            {{ item.creator }}
-                            {% if item.genre %}
-                                <br><small class="opacity-50 fst-italic">{{ item.genre }}</small>
-                            {% endif %}
-                        </td>
-                        
-                        <td>
-                            <span class="badge bg-dark border border-secondary">
-                                {% if item.media_type == 'Book' %}📚 Book
-                                {% elif item.media_type == 'Movie' %}🎬 Movie/TV
-                                {% elif item.media_type == 'Game' %}🎮 Game
-                                {% else %}📦 {{ item.get_media_type_display }}{% endif %}
-                            </span>
+                        <td class="d-none d-sm-table-cell">
+                            <small>{{ item.creator }}</small>
                         </td>
                         
                         <td>
                             {% if item.status == 'Backlog' %}
-                                <span class="badge" style="background-color: #045C63;">Backlog</span>
+                                <span class="badge rounded-pill" style="background-color: #045C63; font-size: 0.7rem;">Back</span>
                             {% elif item.status == 'In-Progress' %}
-                                <span class="badge" style="background-color: #610536;">In-Progress</span>
+                                <span class="badge rounded-pill" style="background-color: #610536; font-size: 0.7rem;">In-P</span>
                             {% else %}
-                                <span class="badge" style="background-color: #0B7007;">Finished</span>
+                                <span class="badge rounded-pill" style="background-color: #0B7007; font-size: 0.7rem;">Done</span>
                             {% endif %}
                         </td>
                         
-                        <td class="text-end pe-4">
-                            <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-light me-1">View</a>
-                            <form action="{% url 'delete_item' item.id %}" method="POST" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ item.title|escapejs }}?');">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <h5 class="opacity-50">No items match your filters.</h5>
-                            <a href="{% url 'pile' %}" class="btn btn-outline-light btn-sm mt-2">Clear All Filters</a>
+                        <td class="text-end pe-3">
+                            <div class="btn-group">
+                                <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-light">View</a>
+                                </div>
                         </td>
                     </tr>
                     {% endfor %}
