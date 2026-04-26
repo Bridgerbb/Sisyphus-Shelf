@@ -7,7 +7,6 @@
     <title>{% block title %}Sisyphus's Shelf{% endblock %}</title>
 
     <script>
-        // This tricks strict mobile browsers into allowing random IDs on HTTP
         if (!window.crypto) window.crypto = {};
         if (!window.crypto.randomUUID) {
             window.crypto.randomUUID = function() {
@@ -44,7 +43,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* Slightly darker for better readability */
+            /* Lowering overlay slightly to make GIFs pop more */
+            background-color: rgba(0, 0, 0, 0.6); 
             z-index: -1; 
         }
 
@@ -55,20 +55,30 @@
         /* --- GLOBAL TEXT POLISH --- */
         h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, label, .form-label, .form-check-label {
             color: #ffffff !important;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-shadow: 1px 1px 3px rgba(0,0,0,1); /* Stronger shadow for ghost state */
+            transition: opacity 0.3s ease;
         }
 
-        .text-muted, .text-secondary {
-            color: rgba(255, 255, 255, 0.6) !important; /* Muted but readable gray-white */
-        }
-
-        /* --- THE GLASS CARD --- */
+        /* --- GHOST CARD LOGIC --- */
         .card, .glass-card, .list-group-item {
-            background-color: rgba(15, 15, 15, 0.9) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            /* Start transparent to show off the GIF */
+            background-color: rgba(15, 15, 15, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: #ffffff !important;
+            backdrop-filter: none; /* Removed blur for GIF clarity */
+            
+            /* Smooth transition when hovering */
+            transition: background-color 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
         }
 
+        /* Solidify on Hover */
+        .card:hover, .glass-card:hover, .list-group-item:hover {
+            background-color: rgba(15, 15, 15, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            transform: translateY(-2px); /* Tiny lift effect for polish */
+        }
+
+        /* Keep tables readable even when ghosted */
         .table {
             background-color: transparent !important;
             color: #ffffff !important;
@@ -80,15 +90,8 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; 
         }
 
-        /* --- GLOBAL INPUT OVERRIDE (For Login/Register) --- */
-        input[type="text"], 
-        input[type="password"], 
-        input[type="email"], 
-        input[type="number"], 
-        textarea, 
-        select,
-        .form-control, 
-        .form-select {
+        /* --- INPUTS --- */
+        .form-control, .form-select {
             background-color: rgba(0, 0, 0, 0.5) !important; 
             border: 1px solid rgba(255, 255, 255, 0.2) !important; 
             color: #ffffff !important; 
@@ -98,23 +101,14 @@
         }
 
         .form-control:focus, .form-select:focus {
-            background-color: rgba(0, 0, 0, 0.7) !important; 
+            background-color: rgba(0, 0, 0, 0.8) !important; 
             border-color: rgba(255, 255, 255, 0.5) !important; 
             box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1) !important; 
         }
 
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.4) !important;
-        }
-
-        /* Dropdown Arrow Fix */
+        /* Dropdown Fix */
         .form-select {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
-        }
-
-        option {
-            background-color: #212529; 
-            color: #ffffff;
         }
 
         /* --- BUTTONS --- */
@@ -125,14 +119,8 @@
         }
 
         .btn-light:hover, .btn-outline-light:hover {
-            background-color: rgba(255, 255, 255, 0.2) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
-        }
-
-        /* Fixes for Bootstrap standard background classes */
-        .bg-light, .bg-white {
-            background-color: rgba(15, 15, 15, 0.9) !important;
-            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
         }
     </style>
 </head>
