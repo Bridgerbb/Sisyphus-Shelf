@@ -13,7 +13,7 @@ class MediaItem(models.Model):
     # Dropdown Choices
     MEDIA_TYPES = [
         ('Book', 'Book'),
-        ('Movie/TV', 'Movie/TV'),
+        ('Movie', 'Movie/TV'),
         ('Game', 'Game'),
         ('Other', 'Other'),
     ]

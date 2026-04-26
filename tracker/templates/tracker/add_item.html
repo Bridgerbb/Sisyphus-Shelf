@@ -111,7 +111,8 @@
             btnText.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...';
 
             const query = queryInput.value;
-            const type = typeField.value.toLowerCase();
+            // This removes the slash and any spaces so "Movie/TV/TV" becomes "movietv"
+            const type = typeField.value.toLowerCase().replace('/', '').replace(' ', '');
 
             resultsDiv.innerHTML = '<div class="list-group-item">Looking for ' + query + '...</div>';
             resultsDiv.style.display = 'block';

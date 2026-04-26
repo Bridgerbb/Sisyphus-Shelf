@@ -61,7 +61,7 @@
     {% for type_val, type_label in items.0.MEDIA_CHOICES %} {% endfor %}
     
     <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
-    <a href="{% url 'pile' %}?type=Movie/TV{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Movie/TV' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies/TV</a>
+    <a href="{% url 'pile' %}?type=Movie/TV/TV{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Movie/TV/TV' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies/TV</a>
     <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
     
     <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
@@ -122,7 +122,7 @@
                         <td>
                             <span class="badge bg-dark border border-secondary">
                                 {% if item.media_type == 'Book' %}📚
-                                {% elif item.media_type == 'Movie/TV' %}🎬
+                                {% elif item.media_type == 'Movie/TV/TV' %}🎬
                                 {% elif item.media_type == 'Game' %}🎮
                                 {% else %}📦{% endif %}
                                 {{ item.get_media_type_display }}

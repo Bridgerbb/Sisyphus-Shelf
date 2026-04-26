@@ -222,7 +222,7 @@ def search_metadata(request):
     results = []
 
     # 🎬 MOVIE & TV SEARCH (TMDB)
-    if media_type == 'movie':
+    if 'movie' in media_type or 'tv' in media_type:
         api_key = os.getenv('TMDB_API_KEY')
         # Using 'multi' endpoint allows us to find Movies and TV Shows simultaneously
         url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&query={query}"
