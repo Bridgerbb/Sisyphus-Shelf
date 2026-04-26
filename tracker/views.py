@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 import os
 import requests
-import random  # For the "I'm Feeling Lucky" feature
+import random 
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -57,10 +57,10 @@ def dashboard(request):
         'backlog': items.filter(status='Backlog').count(),
         'in_progress': items.filter(status='In-Progress').count(),
         'finished': items.filter(status='Finished').count(),
-        # Breakdown for currently active items
+        # Updated to match your new 'Movie/TV' naming
         'reading': items.filter(media_type='Book', status='In-Progress').count(),
         'playing': items.filter(media_type='Game', status='In-Progress').count(),
-        'watching': items.filter(media_type='Movie', status='In-Progress').count(),
+        'watching': items.filter(media_type='Movie/TV', status='In-Progress').count(),
     }
     
     priority_items = items.filter(priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
@@ -74,7 +74,7 @@ def dashboard(request):
 @login_required
 def random_item(request):
     """
-    'I'm Feeling Lucky' - Picks a random unfinished item for the user.
+    'I'm Feeling Lucky' - Picks a random unfinished item.
     """
     backlog = MediaItem.objects.filter(user=request.user).exclude(status='Finished')
     
@@ -210,8 +210,6 @@ def update_queue_order(request):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
         return JsonResponse({'status': 'success'})
 
-# --- UPDATED SEARCH METADATA (TMDB MULTI-SEARCH UPGRADE) ---
-
 def search_metadata(request):
     query = request.GET.get('q')
     media_type = request.GET.get('type', '').lower()
@@ -221,19 +219,16 @@ def search_metadata(request):
 
     results = []
 
-    # 🎬 MOVIE & TV SEARCH (TMDB)
-    if 'movie' in media_type or 'tv' in media_type:
+    # 🎬 MOVIE & TV SEARCH (TMDB MULTI)
+    if media_type and ('movie' in media_type or 'tv' in media_type):
         api_key = os.getenv('TMDB_API_KEY')
-        # Using 'multi' endpoint allows us to find Movies and TV Shows simultaneously
         url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&query={query}"
         response = requests.get(url)
         if response.status_code == 200:
             for item in response.json().get('results', [])[:5]:
-                # We skip 'person' results to keep the demo focused on media items
                 if item.get('media_type') == 'person':
                     continue
                 
-                # TMDB uses 'title' for movies but 'name' for TV series
                 display_title = item.get('title') or item.get('name')
                 media_label = 'Movie' if item.get('media_type') == 'movie' else 'TV Show'
                 
