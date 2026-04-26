@@ -1,6 +1,8 @@
 # Security Keys
 *.pem
 .env
+docker-compose.yml
+
 # Python environment
 venv/
 __pycache__/
