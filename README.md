@@ -1,20 +1,22 @@
 # 📚 Sisyphus's Shelf (The Pile)
 
-A full-stack, multi-user web application built with Django designed to help users track, manage, and visualize their ever-growing backlog of video games, books, and movies.
+A full-stack, multi-user web application built with Django designed to help users track, manage, and visualize their ever-growing backlog of media.
+
+🚀 **[Live Demo] http://44.255.117.28/
 
 ## ✨ Key Features
-* **Multi-User Authentication:** Secure user registration and login system. Users have isolated databases and can only view/edit their own media items.
-* **Interactive Dashboard:** Utilizes Chart.js to provide dynamic visual data graphs of backlog status and automatically queries the user's top "High Priority" items.
-* **Live Search & Filtering:** Dynamically filter the database by Title, Creator, or Custom Genre tags without reloading the page.
-* **Polished UI/UX:** Built with Bootstrap, featuring custom Toast Notifications for all CRUD operations (Create, Read, Update, Delete) and interactive JavaScript modal confirmations.
-* **Containerized Deployment:** Fully Dockerized architecture, deployed live on an AWS EC2 Ubuntu instance.
+* **Multi-User Authentication:** Secure user registration and login system with isolated user databases.
+* **Dynamic Metadata Lookup:** Integrated with TMDB, Google Books, and IGDB APIs to auto-fill covers, creators, and descriptions.
+* **Interactive Dashboard:** Utilizes Chart.js for data visualization and a custom "Shelf Weight" statistics suite.
+* **Priority Queue:** A custom drag-and-drop interface (SortableJS) for reordering high-priority items.
+* **Sisyphus's Choice (Randomizer):** An "I'm Feeling Lucky" feature that picks a random item from the user's backlog to solve choice paralysis.
+* **Containerized Deployment:** Fully Dockerized architecture, deployed on AWS EC2.
 
 ## 🛠️ Technology Stack
-* **Backend:** Python, Django 6.0
-* **Database:** SQLite (Development & Production)
-* **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5, Chart.js
-* **Deployment:** Docker, Docker Compose, AWS EC2
-* **Version Control:** Git & GitHub
+* **Backend:** Python, Django 5.1
+* **Database:** SQLite
+* **Frontend:** JavaScript (ES6+), Bootstrap 5, Chart.js, SortableJS
+* **Deployment:** Docker, AWS EC2, Nginx/WhiteNoise
 
 ## 🚀 Running the Project Locally
 
