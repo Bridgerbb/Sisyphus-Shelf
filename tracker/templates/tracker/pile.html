@@ -5,10 +5,9 @@
 
 {% block content %}
 <style>
-    /* Specific thumbnail styling */
     .pile-thumbnail {
-        width: 50px;
-        height: 75px;
+        width: 45px;
+        height: 65px;
         object-fit: cover;
         transition: transform 0.2s;
     }
@@ -16,117 +15,142 @@
         transform: scale(1.1);
         z-index: 10;
     }
-    
-    /* Clean up the table spacing */
+
+    /* This ensures the table doesn't squish on mobile */
     .table-responsive {
-        border-radius: 15px;
-        overflow: hidden;
+        border-radius: 12px;
+        overflow-x: auto; /* Force horizontal scroll */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Force a minimum width so buttons are always clickable */
+    .table {
+        min-width: 700px; 
+    }
+
+    @media (max-width: 576px) {
+        /* On very small phones, we can reduce the min-width slightly but keep scroll */
+        .table { min-width: 600px; }
+        .display-5 { font-size: 2rem !important; }
     }
 </style>
 
 <div class="row mb-4 mt-2">
-    <div class="col-12 d-flex justify-content-between align-items-center">
+    <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h1 class="display-5 fw-bold">The Pile</h1>
-            <p class="lead opacity-75">Your unified archive of everything waiting to be consumed.</p>
+            <p class="lead opacity-75 mb-0">Your unified archive of everything waiting to be consumed.</p>
         </div>
-        <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg">+ Add New Item</a>
+        <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg w-100 w-md-auto">+ Add New</a>
     </div>
 </div>
 
 <div class="row mb-4">
     <div class="col-12">
-        <form method="GET" action="{% url 'pile' %}" class="d-flex shadow-sm gap-2">
+        <form method="GET" action="{% url 'pile' %}" class="d-flex flex-column flex-md-row shadow-sm gap-2">
             {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
             
             <input type="text" name="q" class="form-control form-control-lg rounded-pill ps-4" 
-                   placeholder="Search by title, creator, or genre..." value="{{ search_query|default_if_none:'' }}">
+                   placeholder="Search title, creator..." value="{{ search_query|default_if_none:'' }}">
             
-            <select name="sort" class="form-select form-select-lg rounded-pill" style="max-width: 220px;" onchange="this.form.submit()">
-                <option value="">Sort by Default</option>
-                <option value="highest" {% if current_sort == 'highest' %}selected{% endif %}>⭐ Highest Rated</option>
-                <option value="lowest" {% if current_sort == 'lowest' %}selected{% endif %}>⭐ Lowest Rated</option>
-            </select>
-
-            <button class="btn btn-outline-light rounded-pill px-4" type="submit">🔍 Search</button>
+            <div class="d-flex gap-2">
+                <select name="sort" class="form-select form-select-lg rounded-pill" onchange="this.form.submit()">
+                    <option value="">Sort: Default</option>
+                    <option value="highest" {% if current_sort == 'highest' %}selected{% endif %}>⭐ Highest</option>
+                    <option value="lowest" {% if current_sort == 'lowest' %}selected{% endif %}>⭐ Lowest</option>
+                </select>
+                <button class="btn btn-outline-light rounded-pill px-4" type="submit">🔍</button>
+            </div>
         </form>
     </div>
 </div>
 
 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
     <a href="{% url 'pile' %}{% if current_sort %}?sort={{ current_sort }}{% endif %}" 
-       class="btn rounded-pill px-4 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">
+       class="btn rounded-pill px-3 transition-all {% if not current_type and not current_status and not search_query %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">
         🌐 All
     </a>
     
-    <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
+    <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-3 {% if current_type == 'Book' %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
+    <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-3 {% if current_type == 'Movie' %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movie/TV</a>
+    <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-3 {% if current_type == 'Game' %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
     
-    <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_type == 'Movie' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies/TV</a>
-    
-    <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
-    
-    <span class="text-white opacity-25 d-flex align-items-center mx-2">|</span>
-
-    <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_status == 'Unfinished' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">⏳ Unfinished</a>
-    
-    <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" 
-       class="btn rounded-pill px-4 {% if current_status == 'Finished' %}btn-light text-dark fw-bold shadow{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
+    <div class="w-100 d-md-none"></div> <a href="{% url 'pile' %}?status=Unfinished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-3 {% if current_status == 'Unfinished' %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">⏳ Unfinished</a>
+    <a href="{% url 'pile' %}?status=Finished{% if current_type %}&type={{ current_type }}{% endif %}" class="btn rounded-pill px-3 {% if current_status == 'Finished' %}btn-light text-dark fw-bold{% else %}btn-outline-light opacity-75{% endif %}">✅ Finished</a>
 </div>
 
-<div class="card shadow-sm border-0 w-100" style="overflow-x: hidden;">
+<div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="min-width: 600px;"> 
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr class="text-white small text-uppercase" style="background-color: rgba(255,255,255,0.05);">
-                        <th scope="col" class="ps-3" style="width: 60px;">Cover</th>
-                        <th scope="col">Title</th>
-                        <th scope="col" class="d-none d-sm-table-cell">Creator</th>
+                        <th scope="col" class="ps-4" style="width: 80px;">Cover</th>
+                        <th scope="col">Title & Creator</th>
+                        <th scope="col">Type</th>
                         <th scope="col">Status</th>
-                        <th scope="col" class="text-end pe-3">Actions</th>
+                        <th scope="col" class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td class="ps-3">
-                            {% if item.cover_image_url %}
-                                <img src="{{ item.cover_image_url }}" class="pile-thumbnail rounded" alt="cover" style="width: 40px; height: 60px;">
-                            {% else %}
-                                <div class="pile-thumbnail rounded bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 60px; font-size: 10px;">NA</div>
-                            {% endif %}
+                        <td class="ps-4">
+                            <a href="{% url 'item_detail' item.id %}">
+                                {% if item.cover_image_url %}
+                                    <img src="{{ item.cover_image_url }}" class="pile-thumbnail rounded shadow-sm" alt="cover">
+                                {% else %}
+                                    <div class="pile-thumbnail rounded bg-secondary d-flex align-items-center justify-content-center text-white-50 small">NA</div>
+                                {% endif %}
+                            </a>
                         </td>
 
                         <td class="fw-bold">
-                            <div class="text-truncate" style="max-width: 150px;">
-                                {{ item.title }}
-                            </div>
-                            <div class="d-sm-none small opacity-50">{{ item.creator }}</div>
+                            <div class="text-white text-break">{{ item.title }}</div>
+                            <small class="opacity-50 fw-normal d-block">{{ item.creator }}</small>
+                            {% if item.priority_flag %}
+                                <span class="badge bg-black border border-danger text-danger mt-1">🔥 Priority</span>
+                            {% endif %}
+                            {% if item.rating %}
+                                <span class="text-warning small ms-1">⭐{{ item.rating }}</span>
+                            {% endif %}
                         </td>
-
-                        <td class="d-none d-sm-table-cell">
-                            <small>{{ item.creator }}</small>
+                        
+                        <td>
+                            <span class="badge bg-dark border border-secondary">
+                                {% if item.media_type == 'Book' %}📚 Book
+                                {% elif item.media_type == 'Movie' %}🎬 Movie/TV
+                                {% elif item.media_type == 'Game' %}🎮 Game
+                                {% else %}📦 Other{% endif %}
+                            </span>
                         </td>
                         
                         <td>
                             {% if item.status == 'Backlog' %}
-                                <span class="badge rounded-pill" style="background-color: #045C63; font-size: 0.7rem;">Back</span>
+                                <span class="badge" style="background-color: #045C63;">Backlog</span>
                             {% elif item.status == 'In-Progress' %}
-                                <span class="badge rounded-pill" style="background-color: #610536; font-size: 0.7rem;">In-P</span>
+                                <span class="badge" style="background-color: #610536;">In-Progress</span>
                             {% else %}
-                                <span class="badge rounded-pill" style="background-color: #0B7007; font-size: 0.7rem;">Done</span>
+                                <span class="badge" style="background-color: #0B7007;">Finished</span>
                             {% endif %}
                         </td>
                         
-                        <td class="text-end pe-3">
+                        <td class="text-end pe-4">
                             <div class="btn-group">
                                 <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-light">View</a>
-                                </div>
+                                <form action="{% url 'delete_item' item.id %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Delete {{ item.title|escapejs }}?');">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <h5 class="opacity-50">The hill is currently empty.</h5>
+                            <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-sm mt-2">Add Something</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -138,26 +162,14 @@
 
 {% if items.has_other_pages %}
 <div class="d-flex justify-content-center mt-4 mb-5">
-    <nav aria-label="Pile Pagination">
-        <ul class="pagination shadow-sm">
+    <nav>
+        <ul class="pagination pagination-sm">
             {% if items.has_previous %}
-                <li class="page-item">
-                    <a class="page-link btn-outline-light border-secondary text-white bg-dark" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                        &laquo; Previous
-                    </a>
-                </li>
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="?page={{ items.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">&laquo;</a></li>
             {% endif %}
-            <li class="page-item disabled">
-                <span class="page-link border-secondary text-white bg-secondary fw-bold">
-                    Page {{ items.number }} of {{ items.paginator.num_pages }}
-                </span>
-            </li>
+            <li class="page-item disabled"><span class="page-link bg-secondary text-white border-secondary">Page {{ items.number }}</span></li>
             {% if items.has_next %}
-                <li class="page-item">
-                    <a class="page-link btn-outline-light border-secondary text-white bg-dark" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                        Next &raquo;
-                    </a>
-                </li>
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">&raquo;</a></li>
             {% endif %}
         </ul>
     </nav>
