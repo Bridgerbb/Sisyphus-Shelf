@@ -57,10 +57,10 @@ def dashboard(request):
         'backlog': items.filter(status='Backlog').count(),
         'in_progress': items.filter(status='In-Progress').count(),
         'finished': items.filter(status='Finished').count(),
-        # Updated to match your new 'Movie/TV' naming
+        # FIX: Database key is 'Movie', not 'Movie/TV'
         'reading': items.filter(media_type='Book', status='In-Progress').count(),
         'playing': items.filter(media_type='Game', status='In-Progress').count(),
-        'watching': items.filter(media_type='Movie/TV', status='In-Progress').count(),
+        'watching': items.filter(media_type='Movie', status='In-Progress').count(),
     }
     
     priority_items = items.filter(priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
@@ -113,7 +113,11 @@ def pile(request):
         )
     
     if filter_type:
-        all_items = all_items.filter(media_type=filter_type)
+        # FIX: If the URL sends 'Movie/TV', we look for 'Movie' in the database
+        if filter_type == 'Movie/TV':
+            all_items = all_items.filter(media_type='Movie')
+        else:
+            all_items = all_items.filter(media_type=filter_type)
         
     if filter_status == 'Finished':
         all_items = all_items.filter(status='Finished')

@@ -5,7 +5,6 @@
 
 {% block content %}
 <style>
-    /* Custom style for the thumbnails */
     .pile-thumbnail {
         width: 50px;
         height: 75px;
@@ -60,7 +59,10 @@
     
     <a href="{% url 'pile' %}?type=Book{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Book' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">📚 Books</a>
     
-    <a href="{% url 'pile' %}?type=Movie/TV{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Movie/TV' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎬 Movies/TV</a>
+    <a href="{% url 'pile' %}?type=Movie{% if current_status %}&status={{ current_status }}{% endif %}" 
+       class="btn rounded-pill px-4 {% if current_type == 'Movie' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">
+       🎬 Movies/TV
+    </a>
     
     <a href="{% url 'pile' %}?type=Game{% if current_status %}&status={{ current_status }}{% endif %}" class="btn rounded-pill px-4 {% if current_type == 'Game' %}btn-light text-dark fw-bolder shadow{% else %}btn-outline-light opacity-75{% endif %}">🎮 Games</a>
     
@@ -106,7 +108,6 @@
                             {% if item.priority_flag %}
                                 <span class="badge bg-black border border-danger text-danger">🔥 Next Up</span>
                             {% endif %}
-                            
                             {% if item.rating %}
                                 <div class="text-warning small mt-1">⭐ {{ item.rating }}/10</div>
                             {% endif %}
@@ -122,10 +123,10 @@
                         <td>
                             <span class="badge bg-dark border border-secondary">
                                 {% if item.media_type == 'Book' %}📚
-                                {% elif item.media_type == 'Movie/TV' %}🎬
+                                {% elif item.media_type == 'Movie' %}🎬
                                 {% elif item.media_type == 'Game' %}🎮
                                 {% else %}📦{% endif %}
-                                {{ item.media_type }}
+                                {{ item.get_media_type_display }}
                             </span>
                         </td>
                         
@@ -147,7 +148,6 @@
                             </form>
                         </td>
                     </tr>
-                    
                     {% empty %}
                     <tr>
                         <td colspan="6" class="text-center py-5 text-muted">
@@ -173,13 +173,11 @@
                     </a>
                 </li>
             {% endif %}
-
             <li class="page-item disabled">
                 <span class="page-link bg-secondary text-white border-secondary fw-bold">
                     Page {{ items.number }} of {{ items.paginator.num_pages }}
                 </span>
             </li>
-
             {% if items.has_next %}
                 <li class="page-item">
                     <a class="page-link bg-dark text-white border-secondary" href="?page={{ items.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
