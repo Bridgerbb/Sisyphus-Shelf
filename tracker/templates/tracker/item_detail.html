@@ -10,7 +10,11 @@
         <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-4">
             {% if item.cover_image_url %}
                 <div class="text-center w-100">
-                    <img id="current-cover-img" src="{{ item.cover_image_url }}" class="img-fluid rounded shadow-lg mb-3" alt="Cover" style="max-height: 400px; object-fit: contain;">
+                    <<img id="current-cover-img" 
+                    src="{{ item.cover_image_url }}" 
+                    class="img-fluid w-100 rounded shadow-lg mb-3" 
+                    alt="Cover" 
+                    style="max-height: 450px; object-fit: contain; width: 100%;">
                     <div>
                         <button type="button" id="remove-cover-btn" class="btn btn-sm btn-outline-danger mt-2">🗑️ Remove Cover</button>
                     </div>
