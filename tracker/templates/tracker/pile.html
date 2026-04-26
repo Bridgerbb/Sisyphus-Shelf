@@ -30,31 +30,38 @@
 </style>
 
 <div class="row mb-4 mt-2">
-    <div class="col-12 d-flex justify-content-between align-items-center">
+    <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h1 class="display-5 fw-bold">The Pile</h1>
             <p class="lead opacity-75 mb-0">Your unified archive of everything waiting to be consumed.</p>
         </div>
-        <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg">+ Add New Item</a>
+        <a href="{% url 'add_item' %}" class="btn btn-outline-light btn-lg w-100 w-md-auto">+ Add New</a>
     </div>
 </div>
 
 <div class="row mb-4">
     <div class="col-12">
-        <form method="GET" action="{% url 'pile' %}" class="d-flex flex-column flex-md-row shadow-sm gap-2">
+        <form method="GET" action="{% url 'pile' %}" class="row g-2 shadow-sm p-0 m-0">
             {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
             
-            <input type="text" name="q" class="form-control form-control-lg rounded-pill ps-4" 
-                   placeholder="Search title, creator..." value="{{ search_query|default_if_none:'' }}">
+            <div class="col-12 col-md-6">
+                <input type="text" name="q" class="form-control rounded-pill px-4" 
+                       placeholder="Search title, creator..." value="{{ search_query|default_if_none:'' }}">
+            </div>
             
-            <div class="d-flex gap-2">
-                <select name="sort" class="form-select form-select-lg rounded-pill" onchange="this.form.submit()">
+            <div class="col-9 col-md-4">
+                <select name="sort" class="form-select rounded-pill px-4" onchange="this.form.submit()">
                     <option value="">Sort: Default</option>
                     <option value="highest" {% if current_sort == 'highest' %}selected{% endif %}>⭐ Highest</option>
                     <option value="lowest" {% if current_sort == 'lowest' %}selected{% endif %}>⭐ Lowest</option>
                 </select>
-                <button class="btn btn-outline-light rounded-pill px-4" type="submit">🔍</button>
+            </div>
+
+            <div class="col-3 col-md-2">
+                <button class="btn btn-outline-light rounded-pill w-100 fw-bold" type="submit">
+                    🔍<span class="d-none d-md-inline ms-1">Search</span>
+                </button>
             </div>
         </form>
     </div>
