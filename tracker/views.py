@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 import os
 import requests
-import random  # Added for the "I'm Feeling Lucky" feature
+import random  # For the "I'm Feeling Lucky" feature
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,7 +20,7 @@ load_dotenv()
 
 def get_igdb_token():
     """
-    Automatically fetches a fresh OAuth token from Twitch.
+    Automatically fetches a fresh OAuth token from Twitch for Game searches.
     """
     client_id = os.getenv('TWITCH_CLIENT_ID')
     client_secret = os.getenv('TWITCH_CLIENT_SECRET')
@@ -43,22 +43,21 @@ def get_igdb_token():
         print(f"Twitch Token Error: {e}")
     return None
 
-# --- ENHANCED VIEWS ---
+# --- CORE VIEWS ---
 
 @login_required
 def dashboard(request):
     """
-    Dashboard with 'Shelf Weight' statistics for the demo.
+    Dashboard with 'Shelf Weight' statistics and Priority Queue.
     """
     items = MediaItem.objects.filter(user=request.user)
     
-    # Enhanced Statistics
     stats = {
         'total': items.count(),
         'backlog': items.filter(status='Backlog').count(),
         'in_progress': items.filter(status='In-Progress').count(),
         'finished': items.filter(status='Finished').count(),
-        # Specific breakdown for 'Currently Doing'
+        # Breakdown for currently active items
         'reading': items.filter(media_type='Book', status='In-Progress').count(),
         'playing': items.filter(media_type='Game', status='In-Progress').count(),
         'watching': items.filter(media_type='Movie', status='In-Progress').count(),
@@ -75,8 +74,7 @@ def dashboard(request):
 @login_required
 def random_item(request):
     """
-    'I'm Feeling Lucky' - Picks a random unfinished item.
-    Great 'Demo Closer' feature.
+    'I'm Feeling Lucky' - Picks a random unfinished item for the user.
     """
     backlog = MediaItem.objects.filter(user=request.user).exclude(status='Finished')
     
@@ -90,6 +88,9 @@ def random_item(request):
 
 @login_required
 def pile(request):
+    """
+    The main list view with filtering and sorting.
+    """
     filter_type = request.GET.get('type')
     filter_status = request.GET.get('status')
     search_query = request.GET.get('q')
@@ -209,6 +210,8 @@ def update_queue_order(request):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
         return JsonResponse({'status': 'success'})
 
+# --- UPDATED SEARCH METADATA (TMDB MULTI-SEARCH UPGRADE) ---
+
 def search_metadata(request):
     query = request.GET.get('q')
     media_type = request.GET.get('type', '').lower()
@@ -218,17 +221,26 @@ def search_metadata(request):
 
     results = []
 
-    # 🎬 MOVIE SEARCH (TMDB)
+    # 🎬 MOVIE & TV SEARCH (TMDB)
     if media_type == 'movie':
         api_key = os.getenv('TMDB_API_KEY')
-        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}"
+        # Using 'multi' endpoint allows us to find Movies and TV Shows simultaneously
+        url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&query={query}"
         response = requests.get(url)
         if response.status_code == 200:
             for item in response.json().get('results', [])[:5]:
+                # We skip 'person' results to keep the demo focused on media items
+                if item.get('media_type') == 'person':
+                    continue
+                
+                # TMDB uses 'title' for movies but 'name' for TV series
+                display_title = item.get('title') or item.get('name')
+                media_label = 'Movie' if item.get('media_type') == 'movie' else 'TV Show'
+                
                 results.append({
-                    'title': item.get('title'),
-                    'creator': 'Movie', 
-                    'genre': 'Film',
+                    'title': display_title,
+                    'creator': media_label, 
+                    'genre': 'Film/TV',
                     'image': f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get('poster_path') else "",
                     'description': item.get('overview', '')
                 })
