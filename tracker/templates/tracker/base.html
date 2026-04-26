@@ -32,9 +32,12 @@
             color: #ffffff; 
         }
         @media (max-width: 768px) {
-        body {
-            /* 'cover' makes the GIF fill the whole screen without stretching */
-            background-size: cover;
+            body {
+            /* 100% makes it span the width of the phone without over-zooming */
+            background-size: 100%;
+            
+            /* Optional: Move it slightly up if the keyboard or nav bars hide it */
+            background-position: center 20%; 
             }
         }
 
