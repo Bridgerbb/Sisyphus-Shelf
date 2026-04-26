@@ -4,65 +4,28 @@
 {% block bg_image %}{% static 'tracker/Continuous.gif' %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4 mb-5">
-    <div class="col-lg-10">
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-lg-8">
         
-        <div class="card bg-dark text-white shadow border-secondary mb-4 overflow-hidden">
-            <div class="row g-0">
-                <div class="col-md-4 bg-black d-flex align-items-center justify-content-center p-3">
-                    {% if item.cover_image_url %}
-                        <img src="{{ item.cover_image_url }}" class="img-fluid rounded shadow-lg" alt="Cover" style="max-height: 400px;">
-                    {% else %}
-                        <div class="text-muted text-center py-5">
-                            <h1 class="display-1">🖼️</h1>
-                            <p>No Cover Art Found</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="col-md-8 d-flex align-items-center">
-                    <div class="card-body p-4 p-md-5">
-                        <h1 class="display-4 fw-bold mb-1">{{ item.title }}</h1>
-                        <h4 class="text-muted mb-4">{{ item.creator }}</h4>
-                        
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="badge bg-dark border border-secondary fs-6 py-2 px-3">
-                                {% if item.media_type == 'Book' %}📚 Book
-                                {% elif item.media_type == 'Movie' %}🎬 Movie
-                                {% elif item.media_type == 'Game' %}🎮 Game
-                                {% else %}📦 Other{% endif %}
-                            </span>
-
-                            <span class="badge fs-6 py-2 px-3 {% if item.status == 'Finished' %}bg-success{% elif item.status == 'In-Progress' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
-                                {{ item.get_status_display }}
-                            </span>
-
-                            {% if item.priority_flag %}
-                                <span class="badge bg-black border border-danger text-danger fs-6 py-2 px-3">🔥 High Priority</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-lg border-0">
             <div class="card-body p-4 p-md-5">
-                <h4 class="fw-bold border-bottom pb-3 mb-4 text-dark">Edit Item Details</h4>
+                <div class="d-flex align-items-center mb-4">
+                    <h1 class="h2 fw-bold text-dark mb-0">✨ Add New Item</h1>
+                </div>
                 
-                <div class="p-3 rounded mb-4 border" style="background-color: rgba(0,0,0,0.05);">
-                    <label class="form-label fw-bold text-dark small text-uppercase">Auto-Update from Web</label>
+                <div class="p-3 rounded mb-4 border bg-light">
+                    <label class="form-label fw-bold text-dark small text-uppercase">Auto-Fill from Web</label>
                     <div class="input-group">
-                        <input type="text" id="metadata-search-input" class="form-control" placeholder="Search for better cover/info...">
+                        <input type="text" id="metadata-search-input" class="form-control" placeholder="Search title (e.g. 'The Matrix' or 'The Great Gatsby')">
                         <button class="btn btn-dark" type="button" id="lookup-btn">🔍 Lookup</button>
                     </div>
-                    <div id="search-results" class="list-group shadow mt-2" style="display: none; position: absolute; z-index: 1000; width: 80%; max-width: 600px;"></div>
+                    <div id="search-results" class="list-group shadow mt-2" style="display: none; position: absolute; z-index: 1000; width: 90%; max-width: 600px;"></div>
                 </div>
 
-                <form action="{% url 'item_detail' item.pk %}" method="POST">
+                <form action="{% url 'add_item' %}" method="POST">
                     {% csrf_token %}
                     
-                    <input type="hidden" name="cover_image_url" id="id_cover_image_url" value="{{ item.cover_image_url }}">
+                    <input type="hidden" name="cover_image_url" id="id_cover_image_url" value="">
 
                     <div class="row g-3 text-dark">
                         <div class="col-md-6">
@@ -70,7 +33,7 @@
                             {{ form.title }}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Creator</label>
+                            <label class="form-label fw-bold">Creator (Author/Director)</label>
                             {{ form.creator }}
                         </div>
 
@@ -107,43 +70,14 @@
                         </div>
 
                         <div class="col-12 mt-4 d-flex justify-content-between border-top pt-4">
-                            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                Delete Item
-                            </button>
-                            
-                            <div>
-                                <a href="{% url 'pile' %}" class="btn btn-light px-4 border">Cancel</a>
-                                <button type="submit" name="action" value="save_and_view" class="btn btn-info px-4 shadow">Save & Keep Editing</button>
-                                <button type="submit" name="action" value="save" class="btn btn-primary px-5 shadow">Save & Exit</button>
-                            </div>
+                            <a href="{% url 'pile' %}" class="btn btn-light px-4 border">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-5 shadow-sm fw-bold">📥 Add to My Shelf</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
 
-    </div>
-</div>
-
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title text-danger fw-bold">⚠️ Confirm Deletion</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you completely sure you want to delete <strong>{{ item.title }}</strong>? <br><br>
-                This action cannot be undone, and Sisyphus will be very disappointed.
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                <form action="{% url 'delete_item' item.pk %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger px-4">Yes, Delete It</button>
-                </form>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -179,28 +113,18 @@
                             <div><div class="fw-bold">${item.title}</div><small class="text-muted">${item.creator}</small></div>
                         `;
                         btn.onclick = () => {
-                            // ALWAYS update the cover image
                             document.getElementById('id_cover_image_url').value = item.image;
-
-                            // Grab the other fields
-                            const titleField = document.getElementById('id_title');
-                            const creatorField = document.getElementById('id_creator');
-                            const genreField = document.getElementById('id_genre');
-
-                            // ONLY update them if they are currently completely empty
-                            if (titleField && titleField.value.trim() === '') titleField.value = item.title;
-                            if (creatorField && creatorField.value.trim() === '') creatorField.value = item.creator;
-                            if (genreField && genreField.value.trim() === '') genreField.value = item.genre;
-                            
+                            document.getElementById('id_title').value = item.title;
+                            document.getElementById('id_creator').value = item.creator;
+                            document.getElementById('id_genre').value = item.genre;
                             resultsDiv.style.display = 'none';
-                            alert("Cover art updated! (Any blank fields were also filled). Click 'Save & Keep Editing' or 'Save & Exit' to finalize.");
+                            alert("Metadata pulled! Check the form below.");
                         };
                         resultsDiv.appendChild(btn);
                     });
                 });
         });
 
-        // Close results if you click away
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#metadata-search-input') && !e.target.closest('#lookup-btn') && !e.target.closest('#search-results')) {
                 const resultsDiv = document.getElementById('search-results');
