@@ -39,8 +39,8 @@
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
+<div class="row mb-4 justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
         <form method="GET" action="{% url 'pile' %}" class="row g-2 shadow-sm p-0 m-0">
             {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
             {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
@@ -90,7 +90,7 @@
                 <thead>
                     <tr class="text-white small text-uppercase" style="background-color: rgba(255,255,255,0.05);">
                         <th scope="col" class="ps-4" style="width: 80px;">Cover</th>
-                        <th scope="col">Title & Creator</th>
+                        <th scope="col">Title & Details</th>
                         <th scope="col">Type</th>
                         <th scope="col">Status</th>
                         <th scope="col" class="text-end pe-4">Actions</th>
@@ -111,7 +111,12 @@
 
                         <td class="fw-bold">
                             <div class="text-white text-break">{{ item.title }}</div>
-                            <small class="opacity-75 fw-normal d-block">{{ item.creator }}</small>
+                            
+                            <small class="opacity-75 fw-normal d-block">
+                                {{ item.creator }} 
+                                {% if item.genre %}<span class="fst-italic opacity-75">| {{ item.genre }}</span>{% endif %}
+                            </small>
+                            
                             {% if item.priority_flag %}
                                 <span class="badge bg-black border border-danger text-danger mt-1">🔥 Priority</span>
                             {% endif %}
