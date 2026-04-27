@@ -32,11 +32,12 @@
             overflow-x: hidden;
         }
 
-        /* RESTORED: Massive zoomed-in GIF for mobile */
+        /* --- THE GOLDILOCKS ZOOM FOR MOBILE --- */
         @media (max-width: 768px) {
             body {
-                background-size: cover; 
-                background-position: center center; 
+                /* 180% prevents extreme cropping while still feeling massive */
+                background-size: 180%; 
+                background-position: center top; 
             }
         }
 
@@ -129,9 +130,9 @@
         @media (max-width: 991px) {
             .display-4, .display-5 { font-size: 2.2rem !important; }
             
-            /* RESTORED: Highly transparent cards on mobile so the GIF shines through */
+            /* Opacity bumped up to exactly 0.55 for better readability */
             .card, .glass-card, .list-group-item { 
-                background-color: rgba(15, 15, 15, 0.4) !important; 
+                background-color: rgba(15, 15, 15, 0.55) !important; 
                 transform: none !important;
             }
             .card:hover, .glass-card:hover, .list-group-item:hover {
