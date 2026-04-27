@@ -24,17 +24,29 @@
         body {
             background-color: #000000; 
             background-image: url('{% block bg_image %}{% static "tracker/Continuous.gif" %}{% endblock %}');
-            background-size: 45%; 
+            background-size: 45%; /* Default for PC */
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
             color: #ffffff; 
             overflow-x: hidden;
         }
-        @media (max-width: 768px) {
+
+        /* --- SMART MOBILE BACKGROUND SIZING --- */
+        /* 1. Phone held normally (Tall) */
+        @media (max-width: 991px) and (orientation: portrait) {
             body {
-                background-size: 125%; 
+                background-size: 120%; 
                 background-position: center top; 
+            }
+        }
+        
+        /* 2. Phone turned sideways (Wide) */
+        @media (max-width: 991px) and (orientation: landscape) {
+            body {
+                /* 'cover' works perfectly for wide aspect ratios without over-zooming */
+                background-size: cover; 
+                background-position: center; 
             }
         }
 
@@ -108,28 +120,25 @@
         .form-control::placeholder { color: rgba(255, 255, 255, 0.4) !important; }
         .form-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important; }
 
-        /* --- BUTTONS & UTILITIES --- */
+        /* --- BUTTONS & UTILITIES (Solid White Hover Added) --- */
         .btn-light, .btn-outline-light {
-            /* Idle State: Glassy and see-through */
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: #ffffff !important;
             border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            transition: all 0.3s ease !important; /* Smooth animation */
+            transition: all 0.3s ease !important;
         }
         
         .btn-light:hover, .btn-outline-light:hover {
-            /* Hover State: Solid White with Black Text */
+            /* Flips to solid white with black text */
             background-color: #ffffff !important;
-            color: #000000 !important; 
+            color: #000000 !important;
             border-color: #ffffff !important;
-            text-shadow: none !important; /* Remove text shadow so the black is crisp */
-            transform: translateY(-2px); /* Gives the button a tiny "lift" when hovered */
+            text-shadow: none !important; 
+            transform: translateY(-2px);
         }
-        
-        /* Optional: Make the red Delete buttons go solid red on hover too */
-        .btn-outline-danger {
-            transition: all 0.3s ease !important;
-        }
+
+        /* Danger buttons go solid red on hover */
+        .btn-outline-danger { transition: all 0.3s ease !important; }
         .btn-outline-danger:hover {
             background-color: #dc3545 !important;
             color: #ffffff !important;
@@ -140,11 +149,12 @@
             background-color: rgba(15, 15, 15, 0.9) !important;
             color: #ffffff !important;
         }
+
         /* --- SAFE MOBILE OVERRIDES --- */
         @media (max-width: 991px) {
             .display-4, .display-5 { font-size: 2.2rem !important; }
             
-            /* Opacity bumped up to exactly 0.55 for better readability */
+            /* Opacity set to 0.55 for better readability on phones */
             .card, .glass-card, .list-group-item { 
                 background-color: rgba(15, 15, 15, 0.55) !important; 
                 transform: none !important;

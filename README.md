@@ -2,7 +2,7 @@
 
 A full-stack, multi-user web application built with Django designed to help users track, manage, and visualize their ever-growing backlog of media.
 
-🚀 **[Live Demo] http://44.255.117.28/
+🚀 [Live Demo] http://44.255.117.28/
 
 ## ✨ Key Features
 * **Multi-User Authentication:** Secure user registration and login system with isolated user databases.
