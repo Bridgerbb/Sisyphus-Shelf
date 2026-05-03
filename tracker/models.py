@@ -38,9 +38,8 @@ class MediaItem(models.Model):
     def __str__(self):
         return self.title
 
-    # <-- OUR NEW BUSINESS LOGIC -->
     def save(self, *args, **kwargs):
-        # If the item is finished, absolutely strip away its priority flag
+        # If the item is finished,  strip away its priority flag
         if self.status == 'Finished':
             self.priority_flag = False
             
