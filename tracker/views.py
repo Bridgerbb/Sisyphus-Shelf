@@ -57,7 +57,6 @@ def dashboard(request):
         'backlog': items.filter(status='Backlog').count(),
         'in_progress': items.filter(status='In-Progress').count(),
         'finished': items.filter(status='Finished').count(),
-        # FIX: Database key is 'Movie', not 'Movie/TV'
         'reading': items.filter(media_type='Book', status='In-Progress').count(),
         'playing': items.filter(media_type='Game', status='In-Progress').count(),
         'watching': items.filter(media_type='Movie', status='In-Progress').count(),
@@ -113,7 +112,6 @@ def pile(request):
         )
     
     if filter_type:
-        # FIX: If the URL sends 'Movie/TV', we look for 'Movie' in the database
         if filter_type == 'Movie/TV':
             all_items = all_items.filter(media_type='Movie')
         else:
@@ -234,11 +232,13 @@ def search_metadata(request):
                     continue
                 
                 display_title = item.get('title') or item.get('name')
-                media_label = 'Movie' if item.get('media_type') == 'movie' else 'TV Show'
+                # FIX: Pull the release year for movies/TV so creator isn't just a generic label
+                date = item.get('release_date') or item.get('first_air_date') or ""
+                year_label = f"Released ({date.split('-')[0]})" if date else "Movie/TV"
                 
                 results.append({
                     'title': display_title,
-                    'creator': media_label, 
+                    'creator': year_label, 
                     'genre': 'Film/TV',
                     'image': f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get('poster_path') else "",
                     'description': item.get('overview', '')
@@ -278,12 +278,23 @@ def search_metadata(request):
                 'Client-ID': client_id,
                 'Authorization': f'Bearer {token}',
             }
-            body = f'search "{query}"; fields name, cover.url, genres.name, summary; limit 5;'
+            # FIX: Added 'involved_companies.company.name' to the fields query
+            body = f'search "{query}"; fields name, cover.url, genres.name, summary, involved_companies.company.name, involved_companies.developer; limit 5;'
             url = "https://api.igdb.com/v4/games"
             
             response = requests.post(url, headers=headers, data=body)
             if response.status_code == 200:
                 for item in response.json():
+                    # FIX: Logic to extract the actual Studio Name
+                    companies = item.get('involved_companies', [])
+                    studio = "Unknown Studio"
+                    for c in companies:
+                        if c.get('developer'): # Prioritize the actual dev studio
+                            studio = c.get('company', {}).get('name', 'Unknown Studio')
+                            break
+                        elif companies: # Fallback to the first company listed
+                            studio = companies[0].get('company', {}).get('name', 'Unknown Studio')
+
                     cover_data = item.get('cover', {})
                     img_url = cover_data.get('url', '').replace('t_thumb', 't_cover_big')
                     if img_url:
@@ -291,8 +302,8 @@ def search_metadata(request):
 
                     results.append({
                         'title': item.get('name'),
-                        'creator': "Game Studio",
-                        'genre': item.get('genres', [{}])[0].get('name', 'Game'),
+                        'creator': studio,
+                        'genre': item.get('genres', [{}])[0].get('name', 'Game') if item.get('genres') else 'Game',
                         'image': img_url,
                         'description': item.get('summary', '')
                     })

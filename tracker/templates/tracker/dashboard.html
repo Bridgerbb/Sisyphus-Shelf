@@ -61,7 +61,7 @@
             
             {% csrf_token %}
             
-            <ul class="list-group list-group-flush" id="sortable-queue">
+            <ul class="list-group list-group-flush" id="sortable-queue" data-update-url="{% url 'update_queue_order' %}">
                 {% for item in priority_items %}
                     <li class="list-group-item bg-transparent border-secondary p-3 transition-all" data-id="{{ item.id }}" style="cursor: grab;">
                         <div class="d-flex justify-content-between align-items-center gap-3">
@@ -95,7 +95,11 @@
     <div class="col-lg-5 mb-4">
         <h4 class="fw-bold mb-3 text-center">📊 Backlog Breakdown</h4>
         <div class="card shadow-sm border-secondary h-100 d-flex justify-content-center align-items-center p-4">
-            <canvas id="backlogChart"></canvas>
+            <canvas id="backlogChart" 
+                    data-backlog="{{ stats.backlog }}" 
+                    data-inprogress="{{ stats.in_progress }}" 
+                    data-finished="{{ stats.finished }}">
+            </canvas>
         </div>
     </div>
 </div>
@@ -105,17 +109,20 @@
 
 <script>
     // --- Chart.js Logic ---
-    const ctx = document.getElementById('backlogChart').getContext('2d');
+    const chartCanvas = document.getElementById('backlogChart');
+    const ctx = chartCanvas.getContext('2d');
+    
+    // Read the data securely from the HTML attributes
+    const backlogData = Number(chartCanvas.dataset.backlog) || 0;
+    const inProgressData = Number(chartCanvas.dataset.inprogress) || 0;
+    const finishedData = Number(chartCanvas.dataset.finished) || 0;
+
     const backlogChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Backlog', 'In-Progress', 'Finished'],
             datasets: [{
-                data: [
-                    {{ stats.backlog }},
-                    {{ stats.in_progress }},
-                    {{ stats.finished }}
-                ],
+                data: [backlogData, inProgressData, finishedData],
                 backgroundColor: [
                     '#045C63', // Backlog
                     '#610536', // In-Progress
@@ -142,12 +149,16 @@
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     if (queue) {
+        // Read the URL securely from the HTML attribute
+        const updateUrl = queue.dataset.updateUrl;
+
         Sortable.create(queue, {
             animation: 150,
             ghostClass: 'opacity-50',
             onEnd: function (evt) {
                 const orderedIds = Array.from(queue.children).map(li => li.getAttribute('data-id'));
-                fetch("{% url 'update_queue_order' %}", {
+                
+                fetch(updateUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
