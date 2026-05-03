@@ -14,6 +14,7 @@ import requests
 import random 
 from dotenv import load_dotenv
 
+# Load environment variables (API keys)
 load_dotenv()
 
 # --- HELPER FUNCTIONS ---
@@ -145,8 +146,12 @@ def pile(request):
 
 @login_required
 def add_item(request):
+    """
+    Handles manually adding an item to the shelf.
+    """
     if request.method == 'POST':
         form = MediaItemForm(request.POST)
+        
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
             
@@ -158,13 +163,19 @@ def add_item(request):
             return redirect('pile') 
     else:
         form = MediaItemForm()
+        
     return render(request, 'tracker/add_item.html', {'form': form})
 
 @login_required
 def item_detail(request, pk):
+    """
+    Detailed view and editing for a specific item.
+    """
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
+    
     if request.method == 'POST':
         form = MediaItemForm(request.POST, instance=item)
+        
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
 
@@ -172,6 +183,7 @@ def item_detail(request, pk):
             item = form.save()
             messages.success(request, f"'{item.title}' was successfully updated!")
             
+            # Determine where to redirect after saving
             if request.POST.get('action') == 'save_and_view':
                 return redirect('item_detail', pk=item.pk)
             else:
@@ -180,18 +192,27 @@ def item_detail(request, pk):
             messages.error(request, "There was an error saving your changes.")
     else:
         form = MediaItemForm(instance=item)
+        
     return render(request, 'tracker/item_detail.html', {'form': form, 'item': item})
 
 @login_required
 def delete_item(request, pk):
+    """
+    Permanently removes an item from the user's database.
+    """
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
+    
     if request.method == 'POST':
         title = item.title 
         item.delete()
         messages.error(request, f"🗑️ '{title}' was permanently deleted.")
+        
     return redirect('pile')
 
 def register(request):
+    """
+    Handles new user registration.
+    """
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -201,18 +222,27 @@ def register(request):
             return redirect('dashboard')
     else:
         form = UserCreationForm()
+        
     return render(request, 'tracker/register.html', {'form': form})
 
 @login_required
 def update_queue_order(request):
+    """
+    Handles AJAX requests for updating drag-and-drop priority order.
+    """
     if request.method == 'POST':
         data = json.loads(request.body)
         ordered_ids = data.get('ordered_ids', [])
+        
         for index, item_id in enumerate(ordered_ids):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
+            
         return JsonResponse({'status': 'success'})
 
 def search_metadata(request):
+    """
+    API Lookup for Books, Movies, and Games.
+    """
     query = request.GET.get('q')
     media_type = request.GET.get('type', '').lower()
     
@@ -220,25 +250,42 @@ def search_metadata(request):
         return JsonResponse([], safe=False)
 
     results = []
+    tmdb_key = os.getenv('TMDB_API_KEY')
 
-    # 🎬 MOVIE & TV SEARCH (TMDB MULTI)
+    # 🎬 MOVIE & TV SEARCH (TMDB)
     if media_type and ('movie' in media_type or 'tv' in media_type):
-        api_key = os.getenv('TMDB_API_KEY')
-        url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&query={query}"
+        url = f"https://api.themoviedb.org/3/search/multi?api_key={tmdb_key}&query={query}"
         response = requests.get(url)
+        
         if response.status_code == 200:
-            for item in response.json().get('results', [])[:5]:
+            # We limit to 3 results to ensure the secondary lookups stay fast
+            for item in response.json().get('results', [])[:3]:
                 if item.get('media_type') == 'person':
                     continue
                 
-                display_title = item.get('title') or item.get('name')
-                # FIX: Pull the release year for movies/TV so creator isn't just a generic label
-                date = item.get('release_date') or item.get('first_air_date') or ""
-                year_label = f"Released ({date.split('-')[0]})" if date else "Movie/TV"
+                item_id = item.get('id')
+                m_type = item.get('media_type')
+                creator_name = "Unknown"
+
+                # SECONDARY LOOKUP: Dig for Director or Network
+                if m_type == 'movie':
+                    credits_url = f"https://api.themoviedb.org/3/movie/{item_id}/credits?api_key={tmdb_key}"
+                    credits_res = requests.get(credits_url)
+                    if credits_res.status_code == 200:
+                        crew = credits_res.json().get('crew', [])
+                        director = next((person['name'] for person in crew if person['job'] == 'Director'), None)
+                        creator_name = director if director else "Unknown Director"
                 
+                elif m_type == 'tv':
+                    tv_details_url = f"https://api.themoviedb.org/3/tv/{item_id}?api_key={tmdb_key}"
+                    tv_details_res = requests.get(tv_details_url)
+                    if tv_details_res.status_code == 200:
+                        networks = tv_details_res.json().get('networks', [])
+                        creator_name = networks[0].get('name') if networks else "Unknown Network"
+
                 results.append({
-                    'title': display_title,
-                    'creator': year_label, 
+                    'title': item.get('title') or item.get('name'),
+                    'creator': creator_name, 
                     'genre': 'Film/TV',
                     'image': f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get('poster_path') else "",
                     'description': item.get('overview', '')
@@ -246,19 +293,17 @@ def search_metadata(request):
 
     # 📚 BOOK SEARCH (Google Books)
     elif media_type == 'book':
-        api_key = os.getenv('GOOGLE_BOOKS_KEY')
+        google_key = os.getenv('GOOGLE_BOOKS_KEY')
         url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
-        if api_key and api_key != "your_key_here":
-            url += f"&key={api_key}"
+        if google_key:
+            url += f"&key={google_key}"
             
         response = requests.get(url)
         if response.status_code == 200:
-            data = response.json()
-            for item in data.get('items', [])[:5]:
+            for item in response.json().get('items', [])[:5]:
                 info = item.get('volumeInfo', {})
                 image_links = info.get('imageLinks', {})
-                image_url = image_links.get('thumbnail') or image_links.get('smallThumbnail') or ""
-                image_url = image_url.replace('http://', 'https://')
+                image_url = image_links.get('thumbnail', "").replace('http://', 'https://')
                 
                 results.append({
                     'title': info.get('title', 'Unknown Title'),
@@ -268,7 +313,7 @@ def search_metadata(request):
                     'description': info.get('description', '')
                 })
 
-    # 🎮 GAME SEARCH (IGDB via Twitch)
+    # 🎮 GAME SEARCH (IGDB)
     elif media_type == 'game':
         client_id = os.getenv('TWITCH_CLIENT_ID')
         token = get_igdb_token()
@@ -278,21 +323,20 @@ def search_metadata(request):
                 'Client-ID': client_id,
                 'Authorization': f'Bearer {token}',
             }
-            # FIX: Added 'involved_companies.company.name' to the fields query
             body = f'search "{query}"; fields name, cover.url, genres.name, summary, involved_companies.company.name, involved_companies.developer; limit 5;'
             url = "https://api.igdb.com/v4/games"
             
             response = requests.post(url, headers=headers, data=body)
             if response.status_code == 200:
                 for item in response.json():
-                    # FIX: Logic to extract the actual Studio Name
+                    # Logic to find the developer name
                     companies = item.get('involved_companies', [])
                     studio = "Unknown Studio"
                     for c in companies:
-                        if c.get('developer'): # Prioritize the actual dev studio
+                        if c.get('developer'):
                             studio = c.get('company', {}).get('name', 'Unknown Studio')
                             break
-                        elif companies: # Fallback to the first company listed
+                        elif companies:
                             studio = companies[0].get('company', {}).get('name', 'Unknown Studio')
 
                     cover_data = item.get('cover', {})
