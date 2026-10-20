@@ -17,3 +17,5 @@ db.sqlite3
 #intellij
 .idea/
 *.iml
+
+staticfiles/
