@@ -12,6 +12,7 @@
     </div>
 </div>
 
+<!-- 📊 Shelf Stats Section -->
 <div class="row mb-5">
     <div class="col-md-3 col-sm-6 mb-3">
         <div class="card h-100 shadow-sm border-0" style="background-color: rgba(52, 58, 64, 0.9) !important;">
@@ -51,6 +52,71 @@
     </div>
 </div>
 
+<!-- 🤖 Sisyphus AI Recommendations -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow border-secondary" style="background-color: rgba(33, 37, 41, 0.9) !important;">
+            <div class="card-header border-secondary fw-bold fs-5 p-3 d-flex justify-content-between align-items-center bg-transparent text-white">
+                <span>🤖 Sisyphus AI Recommendations</span>
+                <span class="badge bg-info text-dark font-monospace">Utility Engine</span>
+            </div>
+            <div class="card-body">
+                <p class="text-white-50 small mb-3">
+                    Items ranked dynamically by composite utility: 
+                    <code class="text-info">Score = w₁S_content + w₂S_collab + αS_serendipity - βt_age</code>
+                </p>
+
+                {% if ai_recommendations %}
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
+                        {% for rec in ai_recommendations %}
+                            {% if rec.item %}
+                                <div class="col">
+                                    <div class="card h-100 border-secondary bg-dark text-white shadow-sm d-flex flex-column">
+                                        {% if rec.item.cover_image_url %}
+                                            <img src="{{ rec.item.cover_image_url }}" class="card-img-top" alt="{{ rec.item.title }}" style="height: 180px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary text-white-50 d-flex align-items-center justify-content-center" style="height: 180px;">
+                                                <span>No Cover Image</span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="card-body p-3 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-secondary border border-secondary text-nowrap" style="font-size: 0.7rem;">
+                                                    {% if rec.item.media_type == 'Book' %}📚 Book
+                                                    {% elif rec.item.media_type == 'Movie' %}🎬 Movie
+                                                    {% elif rec.item.media_type == 'Game' %}🎮 Game
+                                                    {% else %}📦 {{ rec.item.media_type }}{% endif %}
+                                                </span>
+                                                <span class="badge {% if rec.composite_score >= 0 %}bg-success{% else %}bg-danger{% endif %} font-monospace" style="font-size: 0.75rem;">
+                                                    {{ rec.composite_score|floatformat:2 }}
+                                                </span>
+                                            </div>
+                                            <h6 class="card-title text-truncate mb-1 fw-bold fs-6" title="{{ rec.item.title }}">{{ rec.item.title }}</h6>
+                                            <p class="card-text small text-white-50 text-truncate mb-2" style="font-size: 0.8rem;">{{ rec.item.creator }}</p>
+
+                                            <div class="mt-auto pt-2 border-top border-secondary d-flex justify-content-between align-items-center">
+                                                <span class="text-white-50" style="font-size: 0.75rem;">
+                                                    Age: {% if rec.item.backlog_age_days %}{{ rec.item.backlog_age_days }}{% else %}0{% endif %}d
+                                                </span>
+                                                <a href="{% url 'item_detail' rec.item.pk %}" class="btn btn-sm btn-outline-info p-1 px-2" style="font-size: 0.75rem;">View</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        The hill is empty! Add items to your backlog to see AI recommendations.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 Priority Queue & Chart Section -->
 <div class="row">
     <div class="col-lg-7 mb-4">
         <div class="card shadow border-secondary h-100">
@@ -112,7 +178,6 @@
     const chartCanvas = document.getElementById('backlogChart');
     const ctx = chartCanvas.getContext('2d');
     
-    // Read the data securely from the HTML attributes
     const backlogData = Number(chartCanvas.dataset.backlog) || 0;
     const inProgressData = Number(chartCanvas.dataset.inprogress) || 0;
     const finishedData = Number(chartCanvas.dataset.finished) || 0;
@@ -149,7 +214,6 @@
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     if (queue) {
-        // Read the URL securely from the HTML attribute
         const updateUrl = queue.dataset.updateUrl;
 
         Sortable.create(queue, {
@@ -168,7 +232,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Flash success effect
                     evt.item.classList.add('border-success', 'border-2');
                     setTimeout(() => {
                         evt.item.classList.remove('border-success', 'border-2');

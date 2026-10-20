@@ -10,5 +10,6 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('update-queue/', views.update_queue_order, name='update_queue_order'),
     path('api/search-metadata/', views.search_metadata, name='search_metadata'),
+    path('api/recommendations/', views.get_recommendations_api, name='api_recommendations'),  # <--- New AI API Endpoint
     path('random/', views.random_item, name='random_item'),
 ]

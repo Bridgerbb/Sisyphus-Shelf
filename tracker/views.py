@@ -3,7 +3,7 @@ from django.db.models import Case, When, Value, IntegerField, Q, F
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import MediaItemForm
-from .models import MediaItem
+from .models import MediaItem, RecommendationCache
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 import json
@@ -13,6 +13,7 @@ import os
 import requests
 import random 
 from dotenv import load_dotenv
+from .recommender import recommender_engine
 
 # Load environment variables (API keys)
 load_dotenv()
@@ -25,7 +26,7 @@ def get_igdb_token():
     """
     client_id = os.getenv('TWITCH_CLIENT_ID')
     client_secret = os.getenv('TWITCH_CLIENT_SECRET')
-    
+
     if not client_id or not client_secret:
         return None
 
@@ -35,7 +36,7 @@ def get_igdb_token():
         'client_secret': client_secret,
         'grant_type': 'client_credentials'
     }
-    
+
     try:
         response = requests.post(url, params=params)
         if response.status_code == 200:
@@ -49,10 +50,10 @@ def get_igdb_token():
 @login_required
 def dashboard(request):
     """
-    Dashboard with 'Shelf Weight' statistics and Priority Queue.
+    Dashboard with 'Shelf Weight' statistics, Priority Queue, and AI Recommendations.
     """
     items = MediaItem.objects.filter(user=request.user)
-    
+
     stats = {
         'total': items.count(),
         'backlog': items.filter(status='Backlog').count(),
@@ -62,14 +63,68 @@ def dashboard(request):
         'playing': items.filter(media_type='Game', status='In-Progress').count(),
         'watching': items.filter(media_type='Movie', status='In-Progress').count(),
     }
-    
+
     priority_items = items.filter(priority_flag=True).exclude(status='Finished').order_by('queue_order', '-created_at')
-    
+
+    # Query only cached recommendations whose item status is still 'Backlog'
+    ai_recommendations = RecommendationCache.objects.filter(
+        user=request.user,
+        item__isnull=False,
+        item__status='Backlog'
+    ).select_related('item').order_by('-composite_score')[:5]
+
+    # If status changes invalidated the cache, recompute fresh recommendations
+    if not ai_recommendations.exists() and items.filter(status='Backlog').exists():
+        try:
+            recommender_engine.generate_recommendations_for_user(request.user, top_k=5)
+            ai_recommendations = RecommendationCache.objects.filter(
+                user=request.user,
+                item__isnull=False,
+                item__status='Backlog'
+            ).select_related('item').order_by('-composite_score')[:5]
+        except Exception as e:
+            print(f"\n⚠️ Recommender Engine Error on Dashboard: {e}\n")
+            ai_recommendations = []
+
     context = {
         'stats': stats,
         'priority_items': priority_items,
+        'ai_recommendations': ai_recommendations,
     }
     return render(request, 'tracker/dashboard.html', context)
+
+@login_required
+def get_recommendations_api(request):
+    """
+    API Endpoint returning JSON recommendations for real-time frontend/slider adjustments.
+    """
+    alpha = float(request.GET.get('alpha', 0.2))
+    beta = float(request.GET.get('beta', 0.01))
+    top_k = int(request.GET.get('top_k', 10))
+
+    recs = recommender_engine.generate_recommendations_for_user(
+        user=request.user,
+        top_k=top_k,
+        alpha=alpha,
+        beta=beta
+    )
+
+    data = [
+        {
+            'id': rec.item.id,
+            'title': rec.item.title,
+            'creator': rec.item.creator,
+            'media_type': rec.item.media_type,
+            'cover_image_url': rec.item.cover_image_url,
+            'composite_score': round(rec.composite_score, 3),
+            's_content': round(rec.s_content, 3),
+            's_collaborative': round(rec.s_collaborative, 3),
+            's_serendipity': round(rec.s_serendipity, 3),
+            'backlog_age_days': rec.item.backlog_age_days if hasattr(rec.item, 'backlog_age_days') else 0,
+        }
+        for rec in recs
+    ]
+    return JsonResponse({'status': 'success', 'recommendations': data})
 
 @login_required
 def random_item(request):
@@ -77,12 +132,12 @@ def random_item(request):
     'I'm Feeling Lucky' - Picks a random unfinished item.
     """
     backlog = MediaItem.objects.filter(user=request.user).exclude(status='Finished')
-    
+
     if backlog.exists():
         selected = random.choice(list(backlog))
         messages.info(request, f"🎲 Sisyphus chose for you: {selected.title}")
         return redirect('item_detail', pk=selected.pk)
-    
+
     messages.warning(request, "The hill is empty! Add something to the pile first.")
     return redirect('pile')
 
@@ -95,7 +150,7 @@ def pile(request):
     filter_status = request.GET.get('status')
     search_query = request.GET.get('q')
     sort_by = request.GET.get('sort', '')
-    
+
     all_items = MediaItem.objects.filter(user=request.user).annotate(
         custom_order=Case(
             When(status='In-Progress', then=Value(0)), 
@@ -111,13 +166,13 @@ def pile(request):
             Q(creator__icontains=search_query) |
             Q(genre__icontains=search_query) 
         )
-    
+
     if filter_type:
         if filter_type == 'Movie/TV':
             all_items = all_items.filter(media_type='Movie')
         else:
             all_items = all_items.filter(media_type=filter_type)
-        
+
     if filter_status == 'Finished':
         all_items = all_items.filter(status='Finished')
     elif filter_status == 'Unfinished':
@@ -129,11 +184,11 @@ def pile(request):
         all_items = all_items.order_by(F('rating').asc(nulls_last=True), 'custom_order', 'created_at')
     else:
         all_items = all_items.order_by('custom_order', 'created_at')
-    
+
     paginator = Paginator(all_items, 15) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'items': page_obj, 
         'current_type': filter_type,
@@ -141,7 +196,7 @@ def pile(request):
         'search_query': search_query,
         'current_sort': sort_by 
     }
-    
+
     return render(request, 'tracker/pile.html', context)
 
 @login_required
@@ -151,19 +206,23 @@ def add_item(request):
     """
     if request.method == 'POST':
         form = MediaItemForm(request.POST)
-        
+
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
-            
+
         if form.is_valid():
             item = form.save(commit=False)
             item.user = request.user
             item.save()
+            
+            # Clear recommendation cache so newly added backlog items can be evaluated
+            RecommendationCache.objects.filter(user=request.user).delete()
+            
             messages.success(request, f"'{item.title}' was added to your pile!")
             return redirect('pile') 
     else:
         form = MediaItemForm()
-        
+
     return render(request, 'tracker/add_item.html', {'form': form})
 
 @login_required
@@ -172,18 +231,21 @@ def item_detail(request, pk):
     Detailed view and editing for a specific item.
     """
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
-    
+
     if request.method == 'POST':
         form = MediaItemForm(request.POST, instance=item)
-        
+
         if 'cover_image_url' in form.fields:
             form.fields['cover_image_url'].required = False
 
         if form.is_valid():
             item = form.save()
-            messages.success(request, f"'{item.title}' was successfully updated!")
             
-            # Determine where to redirect after saving
+            # Invalidate cached recommendations whenever an item's status or details are updated
+            RecommendationCache.objects.filter(user=request.user).delete()
+            
+            messages.success(request, f"'{item.title}' was successfully updated!")
+
             if request.POST.get('action') == 'save_and_view':
                 return redirect('item_detail', pk=item.pk)
             else:
@@ -192,7 +254,7 @@ def item_detail(request, pk):
             messages.error(request, "There was an error saving your changes.")
     else:
         form = MediaItemForm(instance=item)
-        
+
     return render(request, 'tracker/item_detail.html', {'form': form, 'item': item})
 
 @login_required
@@ -201,12 +263,16 @@ def delete_item(request, pk):
     Permanently removes an item from the user's database.
     """
     item = get_object_or_404(MediaItem, pk=pk, user=request.user)
-    
+
     if request.method == 'POST':
         title = item.title 
         item.delete()
-        messages.error(request, f"🗑️ '{title}' was permanently deleted.")
         
+        # Clear recommendation cache on item deletion
+        RecommendationCache.objects.filter(user=request.user).delete()
+        
+        messages.error(request, f"🗑️ '{title}' was permanently deleted.")
+
     return redirect('pile')
 
 def register(request):
@@ -222,7 +288,7 @@ def register(request):
             return redirect('dashboard')
     else:
         form = UserCreationForm()
-        
+
     return render(request, 'tracker/register.html', {'form': form})
 
 @login_required
@@ -233,19 +299,19 @@ def update_queue_order(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         ordered_ids = data.get('ordered_ids', [])
-        
+
         for index, item_id in enumerate(ordered_ids):
             MediaItem.objects.filter(id=item_id, user=request.user).update(queue_order=index)
-            
+
         return JsonResponse({'status': 'success'})
 
 def search_metadata(request):
     """
-    API Lookup for Books, Movies, and Games.
+    API Lookup for Books, Movies, and Games. Captures TMDB ID and Synopsis for AI processing.
     """
     query = request.GET.get('q')
     media_type = request.GET.get('type', '').lower()
-    
+
     if not query:
         return JsonResponse([], safe=False)
 
@@ -256,18 +322,16 @@ def search_metadata(request):
     if media_type and ('movie' in media_type or 'tv' in media_type):
         url = f"https://api.themoviedb.org/3/search/multi?api_key={tmdb_key}&query={query}"
         response = requests.get(url)
-        
+
         if response.status_code == 200:
-            # We limit to 3 results to ensure the secondary lookups stay fast
             for item in response.json().get('results', [])[:3]:
                 if item.get('media_type') == 'person':
                     continue
-                
+
                 item_id = item.get('id')
                 m_type = item.get('media_type')
                 creator_name = "Unknown"
 
-                # SECONDARY LOOKUP: Dig for Director or Network
                 if m_type == 'movie':
                     credits_url = f"https://api.themoviedb.org/3/movie/{item_id}/credits?api_key={tmdb_key}"
                     credits_res = requests.get(credits_url)
@@ -275,7 +339,7 @@ def search_metadata(request):
                         crew = credits_res.json().get('crew', [])
                         director = next((person['name'] for person in crew if person['job'] == 'Director'), None)
                         creator_name = director if director else "Unknown Director"
-                
+
                 elif m_type == 'tv':
                     tv_details_url = f"https://api.themoviedb.org/3/tv/{item_id}?api_key={tmdb_key}"
                     tv_details_res = requests.get(tv_details_url)
@@ -284,11 +348,13 @@ def search_metadata(request):
                         creator_name = networks[0].get('name') if networks else "Unknown Network"
 
                 results.append({
+                    'tmdb_id': item_id,
                     'title': item.get('title') or item.get('name'),
                     'creator': creator_name, 
                     'genre': 'Film/TV',
                     'image': f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get('poster_path') else "",
-                    'description': item.get('overview', '')
+                    'description': item.get('overview', ''),
+                    'synopsis': item.get('overview', '')
                 })
 
     # 📚 BOOK SEARCH (Google Books)
@@ -297,27 +363,29 @@ def search_metadata(request):
         url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
         if google_key:
             url += f"&key={google_key}"
-            
+
         response = requests.get(url)
         if response.status_code == 200:
             for item in response.json().get('items', [])[:5]:
                 info = item.get('volumeInfo', {})
                 image_links = info.get('imageLinks', {})
                 image_url = image_links.get('thumbnail', "").replace('http://', 'https://')
-                
+
                 results.append({
+                    'tmdb_id': None,
                     'title': info.get('title', 'Unknown Title'),
                     'creator': ", ".join(info.get('authors', ['Unknown Author'])),
                     'genre': ", ".join(info.get('categories', ['Book'])),
                     'image': image_url,
-                    'description': info.get('description', '')
+                    'description': info.get('description', ''),
+                    'synopsis': info.get('description', '')
                 })
 
     # 🎮 GAME SEARCH (IGDB)
     elif media_type == 'game':
         client_id = os.getenv('TWITCH_CLIENT_ID')
         token = get_igdb_token()
-        
+
         if client_id and token:
             headers = {
                 'Client-ID': client_id,
@@ -325,11 +393,10 @@ def search_metadata(request):
             }
             body = f'search "{query}"; fields name, cover.url, genres.name, summary, involved_companies.company.name, involved_companies.developer; limit 5;'
             url = "https://api.igdb.com/v4/games"
-            
+
             response = requests.post(url, headers=headers, data=body)
             if response.status_code == 200:
                 for item in response.json():
-                    # Logic to find the developer name
                     companies = item.get('involved_companies', [])
                     studio = "Unknown Studio"
                     for c in companies:
@@ -345,11 +412,13 @@ def search_metadata(request):
                         img_url = "https:" + img_url
 
                     results.append({
+                        'tmdb_id': None,
                         'title': item.get('name'),
                         'creator': studio,
                         'genre': item.get('genres', [{}])[0].get('name', 'Game') if item.get('genres') else 'Game',
                         'image': img_url,
-                        'description': item.get('summary', '')
+                        'description': item.get('summary', ''),
+                        'synopsis': item.get('summary', '')
                     })
 
     return JsonResponse(results, safe=False)
