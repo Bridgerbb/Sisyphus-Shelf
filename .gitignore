@@ -13,3 +13,7 @@ db.sqlite3
 
 # OS stuff
 .DS_Store
+
+#intellij
+.idea/
+*.iml
